@@ -70,10 +70,7 @@ class Chessboard {
         }
     }
     getTile(boardFile, boardRank) {
-        return this._tiles[boardFile-1][boardRank-1]
-    }
-    getTilePiece(boardFile, boardRank) {
-        return this._tiles[boardFile][boardRank].hasPiece;
+        return this._boardTiles[boardFile-1][boardRank-1]
     }
     getPieceIcon(fenPiece) {
         return this._pieceIcons[fenPiece];
@@ -103,7 +100,10 @@ class Chessboard {
         this._fen = newFen;
     }
     setTile(tileCoordinate, tileColour, boardFile, boardRank, hasPiece) {
-        this._tiles[boardFile-1][boardRank-1] = this.createTile(tileCoordinate, tileColour, boardFile, boardRank, hasPiece);
+        this._boardTiles[boardFile-1][boardRank-1] = this.createTile(tileCoordinate, tileColour, boardFile, boardRank, hasPiece);
+    }
+    setTilePiece(boardFile,boardRank,newPiece) {
+        this._boardTiles[boardFile-1][boardRank-1].hasPiece = newPiece;
     }
     setBoardTiles(newBoardTiles) {
         this._boardTiles = newBoardTiles;
@@ -112,8 +112,8 @@ class Chessboard {
     //Create Board
     createPiece(boardFile, boardRank) {
         const fenPiece = this.getPieceFromFen(boardFile,boardRank)
-        let pieceColour = null
-        let pieceType = null
+        let pieceColour
+        let pieceType
         if(fenPiece) {
             pieceColour = fenPiece==fenPiece.toUpperCase() ? "white" : "black"
             switch(fenPiece.toLowerCase()) {
@@ -181,7 +181,7 @@ class Chessboard {
     
     //Generate FEN
     createFenCharacter(boardFile, boardRank) {
-        const hasPiece = this.getTilePiece(boardFile,boardRank)
+        const hasPiece = this.getTile(boardFile,boardRank).hasPiece
         let pieceType
         let pieceColour
         let fenTile = ""
@@ -206,9 +206,9 @@ class Chessboard {
         let fenString;
 
         let rankNotation = [];
-        for(let boardRank=0; boardRank<8; boardRank++) {
+        for(let boardRank=1; boardRank<=8; boardRank++) {
             let emptyTileCount = 0;
-            for(let boardFile=0; boardFile<8; boardFile++) {
+            for(let boardFile=1; boardFile<=8; boardFile++) {
                 const fenCharacter = this.createFenCharacter(boardFile,boardRank)
                 if(fenCharacter) {
                     if(emptyTileCount>0) {
@@ -252,7 +252,7 @@ class Chessboard {
                 }
     
                 const tileHtml = 
-                `<div class="board-tile" data-tile-coordinate=${tile.tileCoordinate} data-tile-file=${tile.boardFile} data-tile-rank=${tile.boardRank} data-tile-colour=${tile.tileColour} data-has-piece-type=${pieceType} data-has-piece-colour=${pieceColour}
+                `<div class="board-tile" data-tile-coordinate=${tile.tileCoordinate} data-tile-colour=${tile.tileColour} data-board-file=${tile.boardFile} data-board-rank=${tile.boardRank}
                 style="z-index:1; height:50px; width:50px; background-color:${tile.tileColour}; outline:1px solid red; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-start; position: relative;">
                     ${pieceHtml}
                     <p style="z-index:10; color:${tile.tileColour}; filter:invert(1); pointer-events:none; user-select:none; font-size:0.6em; padding:0.2em; margin:0;">
