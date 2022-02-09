@@ -74,6 +74,22 @@ class ChessBoard {
     getTile(boardFile, boardRank) {
         return this._tiles[boardFile-1][boardRank-1]
     }
+    getTilePiece(boardFile, boardRank) {
+        return this._tiles[boardFile][boardRank].hasPiece;
+    }
+    getPieceIcon(fenPiece) {
+        return this._pieceIcons[fenPiece];
+    }
+    getBoardFile(boardFile) {
+        return this._boardTiles[boardFile-1]
+    }
+    getBoardRow(boardRow) {
+        const row = []
+        for(let boardFile=0;boardFile<8;boardFile++) {
+            row.push(this._boardTiles[boardFile][boardRow-1])
+        }
+        return row;
+    }
     getBoardTiles() {
         const tiles = []
         this._boardTiles.forEach(file => {
@@ -147,19 +163,70 @@ class ChessBoard {
         }
     }
     createBoardTiles() {
-        const boardTiles = [];
+        const tiles = [];
         for(let boardFile=1; boardFile<=8; boardFile++) {
-            const boardFile = [];
-            let tileColour = (boardFile%2==0) ? "white" : "black";
+            const file = [];
+            let tileColour = (file%2==0) ? "white" : "black";
             for(let boardRank=1; boardRank<=8; boardRank++) {
                 const hasPiece = this.createPiece(boardFile,boardRank)
                 const tileCoordinate = this.createTileCoordinate(boardFile,boardRank)
-                const tile = this.createTile(tileCoordinate, tileColour,boardFile,boardRank,hasPiece);
-                boardFile.push(tile);
-                tileColour = tileColour=="white" ? "black" : "white";
+                const tile = this.createTile(tileCoordinate,tileColour,boardFile,boardRank,hasPiece);
+                file.push(tile);
+                tileColour = tileColour=="white"?"black":"white";
             }
-            boardTiles.push(file);
+            tiles.push(file);
         }
-        this.setBoardTiles(boardTiles)
+        this.setBoardTiles(tiles)
+    }
+    
+    //Generate FEN
+    createFenCharacter(boardFile, boardRank) {
+        const hasPiece = this.getTilePiece(boardFile,boardRank)
+        let pieceType
+        let pieceColour
+        let fenTile = ""
+
+        if(hasPiece) {
+            pieceType = hasPiece.pieceType
+            pieceColour = hasPiece.pieceColour
+            switch(pieceType.toLowerCase()) {
+                case "rook": fenTile += "r"; break;
+                case "knight": fenTile += "n"; break;
+                case "bishop": fenTile += "b"; break;
+                case "queen": fenTile += "q"; break;
+                case "king": fenTile += "k"; break;
+                case "pawn": fenTile += "p"; break;
+            }
+            if(pieceColour == "white") { fenTile = fenTile.toUpperCase() }
+        }
+        return fenTile;
+    }
+    createFenString() {
+        const fenArray = [];
+        let fenString;
+
+        let rankNotation = [];
+        for(let boardRank=0; boardRank<8; boardRank++) {
+            let emptyTileCount = 0;
+            for(let boardFile=0; boardFile<8; boardFile++) {
+                const fenCharacter = this.createFenCharacter(boardFile,boardRank)
+                if(fenCharacter) {
+                    if(emptyTileCount>0) {
+                        rankNotation.push(emptyTileCount)
+                        emptyTileCount = 0
+                    }
+                    rankNotation.push(fenCharacter)
+                } else {
+                    emptyTileCount += 1
+                }
+            }
+            if(emptyTileCount>0) {
+                rankNotation.push(emptyTileCount)
+            }
+            fenArray.push(rankNotation.join(""));
+            rankNotation = [];
+        }
+        fenString = fenArray.reverse().join("/");
+        return fenString;
     }
 }
