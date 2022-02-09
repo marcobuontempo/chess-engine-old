@@ -28,7 +28,7 @@ Pieces-
 class ChessBoard {
     constructor(fen) {
         this._fen = fen || "rnbqkbnr/ppppqppp/8/8/8/8/PPP2PPP/RNBQKBNR w KQkq - 0 1",
-        this._tiles = [],
+        this._boardTiles = [],
         this._pieceIcons = {
                 k: "♚",
                 q: "♛",
@@ -74,8 +74,14 @@ class ChessBoard {
     getTile(boardFile, boardRank) {
         return this._tiles[boardFile-1][boardRank-1]
     }
-    getTiles() {
-        return this._tiles;
+    getBoardTiles() {
+        const tiles = []
+        this._boardTiles.forEach(file => {
+            file.forEach(tile => {
+                tiles.push(tile)
+            })
+        })
+        return tiles;
     }
 
     //Setters
@@ -83,7 +89,56 @@ class ChessBoard {
         this._fen = newFen;
     }
     setTile(tileCoordinate, tileColour, boardFile, boardRank, hasPiece) {
-        this._tiles[boardFile-1][boardRank-1] = {
+        this._tiles[boardFile-1][boardRank-1] = this.createTile(tileCoordinate, tileColour, boardFile, boardRank, hasPiece);
+    }
+    setBoardTiles(newBoardTiles) {
+        this._boardTiles = newBoardTiles;
+    }
+
+    //Create Board
+    createPiece(boardFile, boardRank) {
+        const fenPiece = this.getPieceFromFen(boardFile,boardRank)
+        let pieceColour = null
+        let pieceType = null
+        if(fenPiece) {
+            pieceColour = fenPiece==fenPiece.toUpperCase() ? "white" : "black"
+            switch(fenPiece.toLowerCase()) {
+                case "r": pieceType = "rook"; break;
+                case "n": pieceType = "knight"; break;
+                case "b": pieceType = "bishop"; break;
+                case "q": pieceType = "queen"; break;
+                case "k": pieceType = "king"; break;
+                case "p": pieceType = "pawn"; break;
+            }
+        }
+        
+        return {
+            pieceColour,
+            pieceType,
+            pieceIcon: this.getPieceIcon(fenPiece)
+        }
+    }
+    createTileColour(boardFile) {
+        let colour = boardFile%2==0 ? "white" : "black";
+        colour = (boardFile%2==0 && colour=="white") ? "black" : "white";
+        return colour;
+    }
+    createTileCoordinate(boardFile, boardRank) {
+        let fileLetter;
+        switch(boardFile) {
+            case(1): fileLetter="A"; break;
+            case(2): fileLetter="B"; break;
+            case(3): fileLetter="C"; break;
+            case(4): fileLetter="D"; break;
+            case(5): fileLetter="E"; break;
+            case(6): fileLetter="F"; break;
+            case(7): fileLetter="G"; break;
+            case(8): fileLetter="H"; break;
+        }
+        return fileLetter+boardRank;
+    }
+    createTile(tileCoordinate, tileColour, boardFile, boardRank, hasPiece) {
+        return {
             tileCoordinate,
             tileColour,
             boardFile,
@@ -91,8 +146,20 @@ class ChessBoard {
             hasPiece
         }
     }
-    setTiles(newTiles) {
-        this._tiles = newTiles;
+    createBoardTiles() {
+        const boardTiles = [];
+        for(let boardFile=1; boardFile<=8; boardFile++) {
+            const boardFile = [];
+            let tileColour = (boardFile%2==0) ? "white" : "black";
+            for(let boardRank=1; boardRank<=8; boardRank++) {
+                const hasPiece = this.createPiece(boardFile,boardRank)
+                const tileCoordinate = this.createTileCoordinate(boardFile,boardRank)
+                const tile = this.createTile(tileCoordinate, tileColour,boardFile,boardRank,hasPiece);
+                boardFile.push(tile);
+                tileColour = tileColour=="white" ? "black" : "white";
+            }
+            boardTiles.push(file);
+        }
+        this.setBoardTiles(boardTiles)
     }
-
 }
