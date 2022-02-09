@@ -27,7 +27,7 @@ Pieces-
 
 class ChessBoard {
     constructor(fen) {
-        this._fen = fen || "rnbqkbnr/ppppqppp/8/8/8/8/PPP2PPP/RNBQKBNR w KQkq - 0 1",
+        this._fen = fen || "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         this._boardTiles = [],
         this._pieceIcons = {
                 k: "♚",
@@ -63,8 +63,7 @@ class ChessBoard {
             }
         }
         
-        const fenPiece = rankFullString[boardFile-1]
-        
+        const fenPiece = rankFullString[boardFile-1]   
         if(fenPiece!="0") {
             return fenPiece
         } else {
@@ -126,18 +125,21 @@ class ChessBoard {
                 case "k": pieceType = "king"; break;
                 case "p": pieceType = "pawn"; break;
             }
-        }
-        
-        return {
-            pieceColour,
-            pieceType,
-            pieceIcon: this.getPieceIcon(fenPiece)
+            return {
+                pieceColour,
+                pieceType,
+                pieceIcon: this.getPieceIcon(fenPiece)
+            }
+        } else {
+            return null
         }
     }
-    createTileColour(boardFile) {
-        let colour = boardFile%2==0 ? "white" : "black";
-        colour = (boardFile%2==0 && colour=="white") ? "black" : "white";
-        return colour;
+    createTileColour(boardFile,boardRank) {
+        if((boardFile%2==0 && boardRank%2!=0) || (boardFile%2!=0 && boardRank%2==0)) {
+            return "white"
+        } else {
+            return "black"
+        }
     }
     createTileCoordinate(boardFile, boardRank) {
         let fileLetter;
@@ -166,13 +168,12 @@ class ChessBoard {
         const tiles = [];
         for(let boardFile=1; boardFile<=8; boardFile++) {
             const file = [];
-            let tileColour = (file%2==0) ? "white" : "black";
             for(let boardRank=1; boardRank<=8; boardRank++) {
-                const hasPiece = this.createPiece(boardFile,boardRank)
                 const tileCoordinate = this.createTileCoordinate(boardFile,boardRank)
+                const tileColour = this.createTileColour(boardFile,boardRank);
+                const hasPiece = this.createPiece(boardFile,boardRank)
                 const tile = this.createTile(tileCoordinate,tileColour,boardFile,boardRank,hasPiece);
                 file.push(tile);
-                tileColour = tileColour=="white"?"black":"white";
             }
             tiles.push(file);
         }
@@ -228,5 +229,47 @@ class ChessBoard {
         }
         fenString = fenArray.reverse().join("/");
         return fenString;
+    }
+
+    //Render Board
+    createBoardHtml() {
+        this.createBoardTiles()
+        let boardHtml = []
+        for(let boardFile=1; boardFile<=8; boardFile++) {
+            const fileHtml = []
+            this.getBoardFile(boardFile).forEach(tile => {
+                let pieceHtml = "";
+                let pieceType
+                let pieceColour
+                if(tile.hasPiece) {
+                    pieceType = tile.hasPiece.pieceType;
+                    pieceColour = tile.hasPiece.pieceColour;
+                    const pieceColourAlt = tile.hasPiece.pieceColour=="white" ? "black" : "white"
+                    pieceHtml = 
+                    `<p class="board-piece" draggable="true" data-piece-type=${tile.hasPiece.pieceType} data-piece-colour=${tile.hasPiece.pieceColour}
+                    style="z-index:10; width:100%; height:100%; text-align:center; font-size:42px; color:${tile.hasPiece.pieceColour}; text-shadow:0 0 1px ${pieceColourAlt}, 0 0 1px ${pieceColourAlt}, 0 0 1px ${pieceColourAlt}, 0 0 1px ${pieceColourAlt}; margin:0; padding:0; position:absolute; cursor:default;">
+                        ${tile.hasPiece.pieceIcon}
+                    </p>`
+                }
+    
+                const tileHtml = 
+                `<div class="board-tile" data-tile-coordinate=${tile.tileCoordinate} data-tile-file=${tile.boardFile} data-tile-rank=${tile.boardRank} data-tile-colour=${tile.tileColour} data-has-piece-type=${pieceType} data-has-piece-colour=${pieceColour}
+                style="z-index:1; height:50px; width:50px; background-color:${tile.tileColour}; outline:1px solid red; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-start; position: relative;">
+                    ${pieceHtml}
+                    <p style="z-index:10; color:${tile.tileColour}; filter:invert(1); pointer-events:none; user-select:none; font-size:0.6em; padding:0.2em; margin:0;">
+                        ${tile.tileCoordinate}
+                    </p>
+                </div>`
+
+                fileHtml.push(tileHtml)
+            })
+            boardHtml.push(`<div style="display:flex; flex-direction:column;">${fileHtml.reverse().join("")}</div>`)
+        }
+        return boardHtml.join("");
+    }
+    renderBoard() {
+        const boardHtml = this.createBoardHtml()
+        const chessboard = document.querySelector("#chessboard")
+        chessboard.innerHTML = boardHtml; 
     }
 }
