@@ -1,5 +1,5 @@
 /*
-Default FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+Default FEN : rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 
 Board-
     R1  08  08  08  08  08  08  08  08              A8  B8  C8  D8  E8  F8  G8  H8              r   n   b   q   k   b   n   r  
@@ -25,7 +25,7 @@ Pieces-
 
 */
 
-class ChessBoard {
+class Chessboard {
     constructor(fen) {
         this._fen = fen || "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         this._boardTiles = [],
@@ -50,7 +50,6 @@ class ChessBoard {
         return this._fen;
     }
     getPieceFromFen(boardFile, boardRank) {
-        // starting position FEN : "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         const rankFenString = this.getFen().split(" ")[0].split("/")[8-boardRank]
 
         let rankFullString = ""

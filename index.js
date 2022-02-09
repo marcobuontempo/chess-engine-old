@@ -1,2 +1,2 @@
-const game = new ChessBoard()
-game.renderBoard()
+const game = new ChessEngine()
+game.getChessboard().renderBoard()
