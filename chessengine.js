@@ -52,12 +52,12 @@ class ChessEngine {
     }
 
     //Piece Interaction
-    handleMoveTile(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) {
-        const previousSelectedTile = this.getSelectedTile()
- 
-
+    addPieceEventListeners() {
+        const boardTiles = document.querySelectorAll(".board-tile")
+        boardTiles.forEach((boardTile) => {
+            boardTile.addEventListener("click", this.eventHandlers.clickTile)
+        })
     }
-
     clickTile(e) {
         const newTileHtml = e.target.classList.contains("board-piece") ? e.target.parentNode : e.target; //to select tile that the piece is on
         const newBoardFile = Number(newTileHtml.dataset.boardFile)
@@ -84,14 +84,25 @@ class ChessEngine {
             //otherwise, move piece
         }
     }
-    addPieceEventListeners() {
-        const boardTiles = document.querySelectorAll(".board-tile")
-        boardTiles.forEach((boardTile) => {
-            boardTile.addEventListener("click", this.eventHandlers.clickTile)
-        })
+    handleMovePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) { 
+
+    }
+    movePiece(fileFrom,rankFrom,fileTo,rankTo) {
+        const pieceFrom = this.getChessboard().getTile(fileFrom,rankFrom).hasPiece
+        this.getChessboard().setTilePiece(fileFrom,rankFrom,null) //remove existing piece from first tile
+        this.getChessboard().setTilePiece(fileTo,rankTo,pieceFrom) //set existing piece onto second tile
     }
 
     //Helpers
+    isPieceCapturable(boardFileFrom, boardRankFrom, boardFileTo, boardRankTo) {
+        const tileFrom = this.getChessboard().getTile(boardFileFrom,boardRankFrom)
+        const tileTo = this.getChessboard().getTile(boardFileTo,boardRankTo)
+        if(tileFrom.hasPiece.pieceColour != tileTo.hasPiece.pieceColour) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     isOnBoardEdge(direction, boardFile, boardRank) {
         let onEdge = false;
         switch(direction) {
@@ -106,9 +117,73 @@ class ChessEngine {
         }
         return onEdge;
     }
-    movePiece(fileFrom,rankFrom,fileTo,rankTo) {
-        const pieceFrom = this.getChessboard().getTile(fileFrom,rankFrom).hasPiece
-        this.getChessboard().setTilePiece(fileFrom,rankFrom,null) //remove existing piece from first tile
-        this.getChessboard().setTilePiece(fileTo,rankTo,pieceFrom) //set existing piece onto second tile
+
+    //Move Validation - Logic
+    generateMoves(boardFileFrom,boardRankFrom) {
+        const pieceType = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece.pieceType
+        let validMoves = [];
+
+        switch(pieceType) {
+            case("rook"):
+                validMoves = this.generateRookMoves(tileCoordinateFrom)
+                break;
+            case("bishop"):
+                validMoves = this.generateBishopMoves(tileCoordinateFrom)
+                break;
+            case("queen"):
+                validMoves = this.generateQueenMoves(tileCoordinateFrom)
+                break;
+            case("king"):
+                validMoves = this.generateKingMoves(tileCoordinateFrom)
+                break;
+            case("knight"):
+                validMoves = this.generateKnightMoves(tileCoordinateFrom)
+                break;
+            case("pawn"):
+                validMoves = this.generatePawnMoves(tileCoordinateFrom)
+                break;
+        }
+
+        return validMoves;
+    }
+    generateDirectionMoves(direction, boardFileFrom, boardRankFrom) { //directions: A-H, H-A, 1-8, 8-1, A1-H8, A8-H1, H1-A8, H8-A1
+        const directionMoves = []
+
+        let count = 1;
+        let fileDirection = 0;
+        let rankDirection = 0;
+        let hasPiece = false;
+
+        switch(direction) {
+            case("A-H"): fileDirection=1; break;
+            case("H-A"): fileDirection=-1; break;
+            case("1-8"): rankDirection=1; break;
+            case("8-1"): rankDirection=-1; break;
+            case("A1-H8"): fileDirection=1; rankDirection=1; break;
+            case("A8-H1"): fileDirection=1; rankDirection=-1; break;
+            case("H1-A8"): fileDirection=-1; rankDirection=1; break;
+            case("H8-A1"): fileDirection=-1; rankDirection=-1; break;
+        }
+
+        if(!this.isOnBoardEdge(direction, boardFileFrom, boardRankFrom)) {
+            while(!hasPiece) {
+                const boardFileTo = boardFileFrom+(count*fileDirection);
+                const boardRankTo = boardRankFrom+(count*rankDirection);
+                const tileToCheck = this.getChessboard().getTile(boardFileTo, boardRankTo)
+                if(tileToCheck.hasPiece!=null) {
+                    hasPiece = true
+                    if(this.isPieceCapturable(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo)) {
+                        directionMoves.push([boardFileTo,boardRankTo])
+                    }
+                } else {
+                    directionMoves.push([boardFileTo,boardRankTo])
+                    count++
+                }
+    
+                if(this.isOnBoardEdge(direction, boardFileTo, boardRankTo)) { break }
+            }
+        }
+
+        return directionMoves;
     }
 }
