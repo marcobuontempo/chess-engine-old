@@ -226,7 +226,39 @@ class ChessEngine {
         }
         return moves;
     }
+    generatePawnMoves(boardFile,boardRank) {
+        const moves = []
 
+        const pieceColour = this.getChessboard().getTile(boardFile,boardRank).hasPiece.pieceColour;
+        const colourOffset = pieceColour=="white" ? 1 : -1; //1 for white (up), -1 for black (down)
+        
+        const boardRankSingle = boardRank+colourOffset
+        const boardRankDouble = boardRank+(colourOffset*2)
+        const boardFileCaptureLeft = boardFile-1
+        const boardFileCaputeRight = boardFile+1
+
+        if(boardRankSingle>=1 && boardRankSingle<=8) {
+            //single pawn push
+            let tileToCheck = this.getChessboard().getTile(boardFile, boardRankSingle)
+            if(tileToCheck.hasPiece==null) moves.push([boardFile, boardRankSingle])
+            //left capture
+            if(boardFileCaptureLeft>=1 && boardFileCaptureLeft<=8) {
+                tileToCheck = this.getChessboard().getTile(boardFileCaptureLeft, boardRankSingle)
+                if(tileToCheck.hasPiece!=null) moves.push([boardFileCaptureLeft, boardRankSingle])
+            }
+            //right capture
+            if(boardFileCaputeRight>=1 && boardFileCaputeRight<=8) {
+                tileToCheck = this.getChessboard().getTile(boardFileCaputeRight, boardRankSingle)
+                if(tileToCheck.hasPiece!=null) moves.push([boardFileCaputeRight, boardRankSingle])
+            }
+        }
+        //double pawn push
+        if((pieceColour=="white" && boardRank==2) || (pieceColour=="black" && boardRank==7)) {
+            const tileToCheck = this.getChessboard().getTile(boardFile, boardRankDouble)
+            if(tileToCheck.hasPiece==null) moves.push([boardFile, boardRankDouble])
+        }
+        return moves
+    }
 
 
 }
