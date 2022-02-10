@@ -202,7 +202,30 @@ class ChessEngine {
                       this.generateDirectionMoves("H8-A1",boardFile,boardRank));
         return moves
     }
+    generateKnightMoves(boardFile,boardRank) {
+        const moves = []
 
+        //possible directions that knight can jump
+        const fileOffset = [-2, -1,  1,  2, -2, -1,  1,  2]
+        const rankOffset = [-1, -2, -2, -1,  1,  2,  2,  1]
+
+        for(let i=0;i<8;i++) {
+            const boardFileToCheck = boardFile+fileOffset[i];
+            const boardRankToCheck = boardRank+rankOffset[i];
+            if(boardFileToCheck>8 || boardFileToCheck<1 || boardRankToCheck>8 || boardRankToCheck<1) continue; //skip iteration it out of board bounds
+
+            const tileToCheck = this.getChessboard().getTile(boardFileToCheck, boardRankToCheck)
+
+            if(tileToCheck.hasPiece!=null) {
+                if(true) {
+                    moves.push([boardFileToCheck,boardRankToCheck])
+                }
+            } else {
+                moves.push([boardFileToCheck,boardRankToCheck])
+            }
+        }
+        return moves;
+    }
 
 
 
