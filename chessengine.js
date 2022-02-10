@@ -101,7 +101,7 @@ class ChessEngine {
             this.toggleValidMovesHighlight(pieceMoves)
         } else {
             //otherwise, move piece
-            //this.handleMovePiece() ..
+            this.handleMovePiece(newBoardFile,newBoardRank)
         }
     }
     toggleValidMovesHighlight(pieceMoves) {        
@@ -112,13 +112,24 @@ class ChessEngine {
             validTileHtml.classList.toggle("highlighted-tile")
         })
     }
-    // handleMovePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) { 
-    //  to handle logic of moving a piece
-    // }
-    movePiece(fileFrom,rankFrom,fileTo,rankTo) {
-        const pieceFrom = this.getChessboard().getTile(fileFrom,rankFrom).hasPiece
-        this.getChessboard().setTilePiece(fileFrom,rankFrom,null) //remove existing piece from first tile
-        this.getChessboard().setTilePiece(fileTo,rankTo,pieceFrom) //set existing piece onto second tile
+    handleMovePiece(boardFileTo,boardRankTo) { 
+        const boardFileFrom = this.getSelectedTile()[0]
+        const boardRankFrom = this.getSelectedTile()[1]
+        this.getSelectedPieceMoves().forEach(validMove => {
+            const boardFileValid = validMove[0]
+            const boardRankValid = validMove[1]
+            if(boardFileTo==boardFileValid && boardRankTo==boardRankValid) {
+                this.movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo)
+                const newFen = this.getChessboard().createFenString()
+                this.getChessboard().setFen(newFen)
+                this.getChessboard().renderBoard()
+            }
+        })
+    }
+    movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) {
+        const pieceFrom = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece
+        this.getChessboard().setTilePiece(boardFileFrom,boardRankFrom,null) //remove existing piece from first tile
+        this.getChessboard().setTilePiece(boardFileTo,boardRankTo,pieceFrom) //set existing piece onto second tile
     }
 
     //Helpers

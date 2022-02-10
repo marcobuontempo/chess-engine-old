@@ -2,7 +2,7 @@ const game = new ChessEngine()
 game.getChessboard().renderBoard()
 
 //test
-game.movePiece(1,1,8,8)
+game.movePiece(4,1,4,4)
 game.getChessboard().setFen(game.getChessboard().createFenString())
 game.getChessboard().renderBoard()
 

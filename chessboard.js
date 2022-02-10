@@ -27,7 +27,7 @@ Pieces-
 
 class Chessboard {
     constructor(fen) {
-        this._fen = fen || "rnbqkbnr/pppppppp/8/8/8/3Rr3/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        this._fen = fen || "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         this._boardTiles = [],
         this._pieceIcons = {
                 k: "♚",
