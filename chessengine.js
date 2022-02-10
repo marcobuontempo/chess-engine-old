@@ -65,6 +65,12 @@ class ChessEngine {
             boardTile.addEventListener("click", this.eventHandlers.clickTile)
         })
     }
+    removePieceEventListeners() {
+        const boardTiles = document.querySelectorAll(".board-tile")
+        boardTiles.forEach((boardTile) => {
+            boardTile.removeEventListener("click", this.eventHandlers.clickTile)
+        })
+    }
     clickTile(e) {
         const newTileHtml = e.target.classList.contains("board-piece") ? e.target.parentNode : e.target; //to select tile that the piece is on
         const newBoardFile = Number(newTileHtml.dataset.boardFile)
@@ -112,25 +118,7 @@ class ChessEngine {
             validTileHtml.classList.toggle("highlighted-tile")
         })
     }
-    handleMovePiece(boardFileTo,boardRankTo) { 
-        const boardFileFrom = this.getSelectedTile()[0]
-        const boardRankFrom = this.getSelectedTile()[1]
-        this.getSelectedPieceMoves().forEach(validMove => {
-            const boardFileValid = validMove[0]
-            const boardRankValid = validMove[1]
-            if(boardFileTo==boardFileValid && boardRankTo==boardRankValid) {
-                this.movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo)
-                const newFen = this.getChessboard().createFenString()
-                this.getChessboard().setFen(newFen)
-                this.getChessboard().renderBoard()
-            }
-        })
-    }
-    movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) {
-        const pieceFrom = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece
-        this.getChessboard().setTilePiece(boardFileFrom,boardRankFrom,null) //remove existing piece from first tile
-        this.getChessboard().setTilePiece(boardFileTo,boardRankTo,pieceFrom) //set existing piece onto second tile
-    }
+
 
     //Helpers
     isPieceCapturable(boardFileFrom, boardRankFrom, boardFileTo, boardRankTo) {
@@ -156,6 +144,11 @@ class ChessEngine {
         }
         return onEdge;
     }
+    toggleTurn() {
+        const newColour = this.getCurrentTurn()=="white" ? "black" : "white"
+        this.setCurrentTurn(newColour)
+    }
+
 
     //Move Validation - Logic
     generateMoves(boardFileFrom,boardRankFrom) {
@@ -318,4 +311,58 @@ class ChessEngine {
         return moves
     }
 
+
+    //Move Piece
+    movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) {
+        const pieceFrom = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece
+        this.getChessboard().setTilePiece(boardFileFrom,boardRankFrom,null) //remove existing piece from first tile
+        this.getChessboard().setTilePiece(boardFileTo,boardRankTo,pieceFrom) //set existing piece onto second tile
+    }
+    handleMovePiece(boardFileTo,boardRankTo) { 
+        const boardFileFrom = this.getSelectedTile()[0]
+        const boardRankFrom = this.getSelectedTile()[1]
+        this.getSelectedPieceMoves().forEach(validMove => {
+            const boardFileValid = validMove[0]
+            const boardRankValid = validMove[1]
+            if(boardFileTo==boardFileValid && boardRankTo==boardRankValid) {
+                this.movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo)
+                this.endTurn()
+            }
+        })
+    }
+
+
+    //Make Turn
+    endTurn() {
+        //update fen
+        const newFen = this.getChessboard().createFenString()
+        this.getChessboard().setFen(newFen)
+
+        //toggle turn
+        this.toggleTurn()
+
+        //reset all values to default
+        this.setSelectedTile([])
+        this.setSelectedPieceMoves([])
+        this.setCurrentTurnMoves([])
+
+        //set attacking pieces
+            //TBC
+
+        //re-render board
+        this.getChessboard().renderBoard()
+
+        //update event listeners
+        this.removePieceEventListeners()
+        this.addPieceEventListeners()
+    }
+
 }
+
+/* TO-DO
+    *Add method to get all opposition's attacked tiles
+    *Add method to check whether king is in check (i.e. is in attacking tile)
+    *Add method to highlight if king is in check
+    *Add method to create testEngine. Validate each move before processing (i.e. prevent pinned pieces moving)
+    *Add method to check game completed -> if no valid moves -> isKingInCheck = checkmate : stalemate
+*/
