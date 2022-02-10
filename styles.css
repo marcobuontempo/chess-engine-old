@@ -6,3 +6,85 @@ html, body {
     width: 100%;
     background-color: slategrey;
 }
+
+
+/* BOARD DISPLAY */
+#chessboard-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+#chessboard {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 3px groove red;
+}
+
+.board-file {
+    display:flex;
+    flex-direction:column;
+}
+
+.board-tile {
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    align-items:flex-start;
+    position: relative;
+    height:50px;
+    width:50px;
+    z-index:1;
+    outline:1px solid red;
+}
+[data-tile-colour="white"] {
+    background-color: white;
+    color: black;
+}
+[data-tile-colour="black"] {
+    background-color: black;
+    color: white;
+}
+
+.tile-coordinate {
+    font-size:0.6em;
+    margin:0;
+    padding:0.2em;
+    z-index:10;
+    pointer-events:none;
+    user-select:none;
+}
+
+
+/* PIECES */
+.board-piece {
+    width:100%;
+    height:100%;
+    margin:0;
+    padding:0;
+    font-size:42px;
+    text-align:center;
+    z-index:10;
+    position:absolute;
+    cursor:default;
+}
+[data-piece-colour="white"] {
+    color: white;
+    text-shadow:0 0 1px black, 0 0 1px black, 0 0 1px black, 0 0 1px black;
+}
+[data-piece-colour="black"] {
+    color: black;
+    text-shadow:0 0 1px white, 0 0 1px white, 0 0 1px white, 0 0 1px white;
+}
+
+
+/* BOARD HIGHLIGHTS */
+.selected-tile {
+    background-color: red;
+}
+.highlighted-tile {
+    background-color: green;
+}

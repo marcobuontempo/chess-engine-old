@@ -238,31 +238,24 @@ class Chessboard {
             const fileHtml = []
             this.getBoardFile(boardFile).forEach(tile => {
                 let pieceHtml = "";
-                let pieceType
-                let pieceColour
                 if(tile.hasPiece) {
-                    pieceType = tile.hasPiece.pieceType;
-                    pieceColour = tile.hasPiece.pieceColour;
-                    const pieceColourAlt = tile.hasPiece.pieceColour=="white" ? "black" : "white"
                     pieceHtml = 
-                    `<p class="board-piece" draggable="true" data-piece-type=${tile.hasPiece.pieceType} data-piece-colour=${tile.hasPiece.pieceColour}
-                    style="z-index:10; width:100%; height:100%; text-align:center; font-size:42px; color:${tile.hasPiece.pieceColour}; text-shadow:0 0 1px ${pieceColourAlt}, 0 0 1px ${pieceColourAlt}, 0 0 1px ${pieceColourAlt}, 0 0 1px ${pieceColourAlt}; margin:0; padding:0; position:absolute; cursor:default;">
+                    `<p class="board-piece" draggable="true" data-piece-type=${tile.hasPiece.pieceType} data-piece-colour=${tile.hasPiece.pieceColour}>
                         ${tile.hasPiece.pieceIcon}
                     </p>`
                 }
     
                 const tileHtml = 
-                `<div class="board-tile" data-tile-coordinate=${tile.tileCoordinate} data-tile-colour=${tile.tileColour} data-board-file=${tile.boardFile} data-board-rank=${tile.boardRank}
-                style="z-index:1; height:50px; width:50px; background-color:${tile.tileColour}; outline:1px solid red; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-start; position: relative;">
+                `<div class="board-tile" data-tile-coordinate=${tile.tileCoordinate} data-tile-colour=${tile.tileColour} data-board-file=${tile.boardFile} data-board-rank=${tile.boardRank}>
                     ${pieceHtml}
-                    <p style="z-index:10; color:${tile.tileColour}; filter:invert(1); pointer-events:none; user-select:none; font-size:0.6em; padding:0.2em; margin:0;">
+                    <p class="tile-coordinate">
                         ${tile.tileCoordinate}
                     </p>
                 </div>`
 
                 fileHtml.push(tileHtml)
             })
-            boardHtml.push(`<div style="display:flex; flex-direction:column;">${fileHtml.reverse().join("")}</div>`)
+            boardHtml.push(`<div class="board-file"">${fileHtml.reverse().join("")}</div>`)
         }
         return boardHtml.join("");
     }

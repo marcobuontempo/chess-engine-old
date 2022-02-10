@@ -77,22 +77,22 @@ class ChessEngine {
         if(!previousSelectedValue && newSelectedTileObject.hasPiece!=null && newSelectedTileObject.hasPiece.pieceColour==this.getCurrentTurn()) { 
             //if no previous piece selected, select newly clicked piece
             this.setSelectedTile(newBoardFile,newBoardRank)
-            newTileHtml.style.backgroundColor = "red"
+            newTileHtml.classList.toggle("selected-tile")
             const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
             this.setSelectedPieceMoves(pieceMoves)
             this.toggleValidMovesHighlight(pieceMoves)
         } else if (previousSelectedValue==newSelectedValue) {
             //if same piece is re-selected, disable the piece's selection
             this.setSelectedTile([])
-            newTileHtml.style.backgroundColor = newTileHtml.dataset.tileColour 
+            newTileHtml.classList.toggle("selected-tile")
             const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
             this.setSelectedPieceMoves([])
             this.toggleValidMovesHighlight(pieceMoves)
         } else if (previousSelectedValue!=newSelectedValue && newSelectedTileObject.hasPiece!=null && newSelectedTileObject.hasPiece.pieceColour==this.getCurrentTurn()) {    
             //if new valid piece is selected, un-select previous and re-select new
             this.setSelectedTile(newBoardFile,newBoardRank)
-            previousTileHtml.style.backgroundColor = previousTileHtml.dataset.tileColour
-            newTileHtml.style.backgroundColor = "red"
+            previousTileHtml.classList.toggle("selected-tile")
+            newTileHtml.classList.toggle("selected-tile")
 
             this.toggleValidMovesHighlight(this.getSelectedPieceMoves())
 
@@ -109,12 +109,7 @@ class ChessEngine {
             const boardFile = validMove[0]
             const boardRank = validMove[1]
             const validTileHtml = document.querySelector(`[data-board-file='${boardFile}'][data-board-rank='${boardRank}']`)
-            const validTileDefaultColour = this.getChessboard().getTile(boardFile,boardRank).tileColour
-            if(validTileHtml.style.backgroundColor==validTileDefaultColour) {
-                validTileHtml.style.backgroundColor="green"
-            } else {
-                validTileHtml.style.backgroundColor=validTileDefaultColour
-            }
+            validTileHtml.classList.toggle("highlighted-tile")
         })
     }
     // handleMovePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) { 
@@ -313,6 +308,3 @@ class ChessEngine {
     }
 
 }
-
-
-// Create "toggle valid moves" highlight method
