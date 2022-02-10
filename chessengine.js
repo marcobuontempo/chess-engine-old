@@ -259,7 +259,26 @@ class ChessEngine {
         }
         return moves
     }
+    generateKingMoves(boardFile,boardRank) {
+        const moves = []
 
+        const fileOffset = [-1, -1, -1,  0,  0,  1,  1,  1]
+        const rankOffset = [-1,  0,  1, -1,  1, -1,  0,  1]
+
+        for(let i=0; i<8; i++) {
+            const boardFileToCheck = boardFile+fileOffset[i];
+            const boardRankToCheck = boardRank+rankOffset[i];
+            if(boardFileToCheck>8 || boardFileToCheck<1 || boardRankToCheck>8 || boardRankToCheck<1) continue; //skip iteration it out of board bounds
+            const tileToCheck = this.getChessboard().getTile(boardFileToCheck, boardRankToCheck)
+
+            if(tileToCheck.hasPiece==null) {
+                moves.push([boardFileToCheck,boardRankToCheck])
+            } else {
+                moves.push([boardFileToCheck,boardRankToCheck])
+            }
+        }
+        return moves
+    }
 
 }
 
