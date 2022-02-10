@@ -268,9 +268,16 @@ class ChessEngine {
         const boardFileCaptureRight = boardFile+1
 
         if(boardRankSingle>=1 && boardRankSingle<=8) {
-            //single pawn push
             let tileToCheck = this.getChessboard().getTile(boardFile, boardRankSingle)
-            if(tileToCheck.hasPiece==null) moves.push([boardFile, boardRankSingle])
+            //single pawn push
+            if(tileToCheck.hasPiece==null) { 
+                moves.push([boardFile, boardRankSingle])
+                //double pawn push
+                if((pieceColour=="white" && boardRank==2) || (pieceColour=="black" && boardRank==7)) {
+                    const tileToCheck = this.getChessboard().getTile(boardFile, boardRankDouble)
+                    if(tileToCheck.hasPiece==null) moves.push([boardFile, boardRankDouble])
+                }
+            }
             //left capture
             if(boardFileCaptureLeft>=1 && boardFileCaptureLeft<=8) {
                 tileToCheck = this.getChessboard().getTile(boardFileCaptureLeft, boardRankSingle)
@@ -281,11 +288,6 @@ class ChessEngine {
                 tileToCheck = this.getChessboard().getTile(boardFileCaptureRight, boardRankSingle)
                 if(tileToCheck.hasPiece!=null && this.isPieceCapturable(boardFile,boardRank,boardFileCaptureRight,boardRankSingle)) moves.push([boardFileCaptureRight, boardRankSingle])
             }
-        }
-        //double pawn push
-        if((pieceColour=="white" && boardRank==2) || (pieceColour=="black" && boardRank==7)) {
-            const tileToCheck = this.getChessboard().getTile(boardFile, boardRankDouble)
-            if(tileToCheck.hasPiece==null) moves.push([boardFile, boardRankDouble])
         }
         return moves
     }
