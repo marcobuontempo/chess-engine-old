@@ -3,8 +3,9 @@ class ChessEngine {
         this._chessboard = new Chessboard(fen),  //the game board to operate within
         this._currentTurn = "white",    //current turn's colour
         this._selectedTile = [],    //the currently selected piece
-        this._currentMoves = [],    //the tiles that the current player is currently attacking. e.g. [ [file,row], [file,row], ... ]
-        this._oppositionMoves = [],    //the tiles that the opposition is currently attacking. e.g. [ [file,row], [file,row], ... ]
+        this._selectedPieceMoves = [], //the tiles that the current selected piece is attacking
+        this._currentTurnMoves = [],    //the tiles that the current player is currently attacking. e.g. [ [file,row], [file,row], ... ]
+        this._oppositionTurnMoves = [],    //the tiles that the opposition is currently attacking. e.g. [ [file,row], [file,row], ... ]
         this._currentKingIsInCheck = false,  //whether the current colour's king is in check
         this.eventHandlers = {  //bind methods. otherwise, 'this' refers to the global variable (this.window). also gives reference so we can remove event listeners
             clickTile: this.clickTile.bind(this)
@@ -24,11 +25,14 @@ class ChessEngine {
     getSelectedTile() {
         return this._selectedTile;
     }
-    getCurrentMoves() {
-        return this._currentMoves;
+    getSelectedPieceMoves() {
+        return this._selectedPieceMoves;
     }
-    getOppositionMoves() {
-        return this._oppositionMoves;
+    getCurrentTurnMoves() {
+        return this._currentTurnMoves;
+    }
+    getOppositionTUrnMoves() {
+        return this._oppositionTurnMoves;
     }
     getCurrentKingIsInCheck() {
         return this._currentKingIsInCheck;
@@ -41,11 +45,14 @@ class ChessEngine {
     setSelectedTile(boardFile,boardRank) {
         this._selectedTile = [boardFile,boardRank];
     }
-    setCurrentMoves(newMoves) {
-        this._currentMoves = newMoves;
+    setSelectedPieceMoves(newMoves) {
+        this._selectedPieceMoves = newMoves;
     }
-    setOppositionMoves(newMoves) {
-        this._oppositionMoves = newMoves;
+    setCurrentTurnMoves(newMoves) {
+        this._currentTurnMoves = newMoves;
+    }
+    setOppositionTurnMoves(newMoves) {
+        this._oppositionTurnMoves = newMoves;
     }
     setCurrentKingIsInCheck(isChecked) {
         this._kingIsInCheck = isChecked;
@@ -71,22 +78,32 @@ class ChessEngine {
             //if no previous piece selected, select newly clicked piece
             this.setSelectedTile(newBoardFile,newBoardRank)
             newTileHtml.style.backgroundColor = "red"
+            const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
+            this.setSelectedPieceMoves(pieceMoves)
         } else if (previousSelectedValue==newSelectedValue) {
             //if same piece is re-selected, disable the piece's selection
             this.setSelectedTile([])
-            newTileHtml.style.backgroundColor = newTileHtml.dataset.tileColour        
+            newTileHtml.style.backgroundColor = newTileHtml.dataset.tileColour 
+            const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
+            this.setSelectedPieceMoves([])
         } else if (previousSelectedValue!=newSelectedValue && newSelectedTileObject.hasPiece!=null && newSelectedTileObject.hasPiece.pieceColour==this.getCurrentTurn()) {    
             //if new valid piece is selected, un-select previous and re-select new
             this.setSelectedTile(newBoardFile,newBoardRank)
             previousTileHtml.style.backgroundColor = previousTileHtml.dataset.tileColour
             newTileHtml.style.backgroundColor = "red"
+
+            this.toggleValidMovesHighlight(this.getSelectedPieceMoves())
+
+            const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
+            this.setSelectedPieceMoves(pieceMoves)
         } else {
             //otherwise, move piece
         }
     }
-    handleMovePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) { 
 
-    }
+    // handleMovePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) { 
+
+    // }
     movePiece(fileFrom,rankFrom,fileTo,rankTo) {
         const pieceFrom = this.getChessboard().getTile(fileFrom,rankFrom).hasPiece
         this.getChessboard().setTilePiece(fileFrom,rankFrom,null) //remove existing piece from first tile
@@ -106,46 +123,20 @@ class ChessEngine {
     isOnBoardEdge(direction, boardFile, boardRank) {
         let onEdge = false;
         switch(direction) {
-            case("A-H"): if(boardFile=="H") onEdge=true; break;
-            case("H-A"): if(boardFile=="A") onEdge=true; break;
-            case("1-8"): if(boardRank=="8") onEdge=true; break;
-            case("8-1"): if(boardRank=="1") onEdge=true; break;
-            case("A1-H8"): if(boardFile=="H" || boardRank=="8") onEdge=true; break;
-            case("A8-H1"): if(boardFile=="H" || boardRank=="1") onEdge=true; break;
-            case("H1-A8"): if(boardFile=="A" || boardRank=="8") onEdge=true; break;
-            case("H8-A1"): if(boardFile=="A" || boardRank=="1") onEdge=true; break;
+            case("A-H"): if(boardFile==8) onEdge=true; break;
+            case("H-A"): if(boardFile==1) onEdge=true; break;
+            case("1-8"): if(boardRank==8) onEdge=true; break;
+            case("8-1"): if(boardRank==1) onEdge=true; break;
+            case("A1-H8"): if(boardFile==8 || boardRank==8) onEdge=true; break;
+            case("A8-H1"): if(boardFile==8 || boardRank==1) onEdge=true; break;
+            case("H1-A8"): if(boardFile==1 || boardRank==8) onEdge=true; break;
+            case("H8-A1"): if(boardFile==1 || boardRank==1) onEdge=true; break;
         }
         return onEdge;
     }
 
     //Move Validation - Logic
-    generateMoves(boardFileFrom,boardRankFrom) {
-        const pieceType = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece.pieceType
-        let validMoves = [];
 
-        switch(pieceType) {
-            case("rook"):
-                validMoves = this.generateRookMoves(tileCoordinateFrom)
-                break;
-            case("bishop"):
-                validMoves = this.generateBishopMoves(tileCoordinateFrom)
-                break;
-            case("queen"):
-                validMoves = this.generateQueenMoves(tileCoordinateFrom)
-                break;
-            case("king"):
-                validMoves = this.generateKingMoves(tileCoordinateFrom)
-                break;
-            case("knight"):
-                validMoves = this.generateKnightMoves(tileCoordinateFrom)
-                break;
-            case("pawn"):
-                validMoves = this.generatePawnMoves(tileCoordinateFrom)
-                break;
-        }
-
-        return validMoves;
-    }
     generateDirectionMoves(direction, boardFileFrom, boardRankFrom) { //directions: A-H, H-A, 1-8, 8-1, A1-H8, A8-H1, H1-A8, H8-A1
         const directionMoves = []
 
@@ -186,4 +177,20 @@ class ChessEngine {
 
         return directionMoves;
     }
+    generateRookMoves(boardFile,boardRank) {
+        const moves =  this.generateDirectionMoves("A-H",boardFile,boardRank).concat(
+                        this.generateDirectionMoves("H-A",boardFile,boardRank),
+                        this.generateDirectionMoves("1-8",boardFile,boardRank),
+                        this.generateDirectionMoves("8-1",boardFile,boardRank));
+        return moves
+    }
+
+
+
+
+
+
 }
+
+
+// Create "toggle valid moves" highlight method
