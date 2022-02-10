@@ -80,12 +80,14 @@ class ChessEngine {
             newTileHtml.style.backgroundColor = "red"
             const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
             this.setSelectedPieceMoves(pieceMoves)
+            this.toggleValidMovesHighlight(pieceMoves)
         } else if (previousSelectedValue==newSelectedValue) {
             //if same piece is re-selected, disable the piece's selection
             this.setSelectedTile([])
             newTileHtml.style.backgroundColor = newTileHtml.dataset.tileColour 
             const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
             this.setSelectedPieceMoves([])
+            this.toggleValidMovesHighlight(pieceMoves)
         } else if (previousSelectedValue!=newSelectedValue && newSelectedTileObject.hasPiece!=null && newSelectedTileObject.hasPiece.pieceColour==this.getCurrentTurn()) {    
             //if new valid piece is selected, un-select previous and re-select new
             this.setSelectedTile(newBoardFile,newBoardRank)
@@ -96,11 +98,24 @@ class ChessEngine {
 
             const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
             this.setSelectedPieceMoves(pieceMoves)
+            this.toggleValidMovesHighlight(pieceMoves)
         } else {
             //otherwise, move piece
         }
     }
-
+    toggleValidMovesHighlight(pieceMoves) {        
+        pieceMoves.forEach(validMove => {
+            const boardFile = validMove[0]
+            const boardRank = validMove[1]
+            const validTileHtml = document.querySelector(`[data-board-file='${boardFile}'][data-board-rank='${boardRank}']`)
+            const validTileDefaultColour = this.getChessboard().getTile(boardFile,boardRank).tileColour
+            if(validTileHtml.style.backgroundColor==validTileDefaultColour) {
+                validTileHtml.style.backgroundColor="green"
+            } else {
+                validTileHtml.style.backgroundColor=validTileDefaultColour
+            }
+        })
+    }
     // handleMovePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) { 
 
     // }
