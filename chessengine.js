@@ -136,7 +136,21 @@ class ChessEngine {
     }
 
     //Move Validation - Logic
+    generateMoves(boardFileFrom,boardRankFrom) {
+        const pieceType = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece.pieceType
+        let validMoves = [];
 
+        switch(pieceType) {
+            case("rook"): validMoves=this.generateRookMoves(boardFileFrom,boardRankFrom); break;
+            case("bishop"): validMoves=this.generateBishopMoves(boardFileFrom,boardRankFrom); break;
+            case("queen"): validMoves=this.generateQueenMoves(boardFileFrom,boardRankFrom); break;
+            case("king"): validMoves=this.generateKingMoves(boardFileFrom,boardRankFrom); break;
+            case("knight"): validMoves=this.generateKnightMoves(boardFileFrom,boardRankFrom); break;
+            case("pawn"): validMoves=this.generatePawnMoves(boardFileFrom,boardRankFrom); break;
+        }
+
+        return validMoves;
+    }
     generateDirectionMoves(direction, boardFileFrom, boardRankFrom) { //directions: A-H, H-A, 1-8, 8-1, A1-H8, A8-H1, H1-A8, H8-A1
         const directionMoves = []
 
