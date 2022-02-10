@@ -101,6 +101,7 @@ class ChessEngine {
             this.toggleValidMovesHighlight(pieceMoves)
         } else {
             //otherwise, move piece
+            //this.handleMovePiece() ..
         }
     }
     toggleValidMovesHighlight(pieceMoves) {        
@@ -117,7 +118,7 @@ class ChessEngine {
         })
     }
     // handleMovePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) { 
-
+    //  to handle logic of moving a piece
     // }
     movePiece(fileFrom,rankFrom,fileTo,rankTo) {
         const pieceFrom = this.getChessboard().getTile(fileFrom,rankFrom).hasPiece
@@ -246,7 +247,7 @@ class ChessEngine {
             const tileToCheck = this.getChessboard().getTile(boardFileToCheck, boardRankToCheck)
 
             if(tileToCheck.hasPiece!=null) {
-                if(true) {
+                if(this.isPieceCapturable(boardFile,boardRank,boardFileToCheck,boardRankToCheck)) {
                     moves.push([boardFileToCheck,boardRankToCheck])
                 }
             } else {
@@ -264,7 +265,7 @@ class ChessEngine {
         const boardRankSingle = boardRank+colourOffset
         const boardRankDouble = boardRank+(colourOffset*2)
         const boardFileCaptureLeft = boardFile-1
-        const boardFileCaputeRight = boardFile+1
+        const boardFileCaptureRight = boardFile+1
 
         if(boardRankSingle>=1 && boardRankSingle<=8) {
             //single pawn push
@@ -273,12 +274,12 @@ class ChessEngine {
             //left capture
             if(boardFileCaptureLeft>=1 && boardFileCaptureLeft<=8) {
                 tileToCheck = this.getChessboard().getTile(boardFileCaptureLeft, boardRankSingle)
-                if(tileToCheck.hasPiece!=null) moves.push([boardFileCaptureLeft, boardRankSingle])
+                if(tileToCheck.hasPiece!=null && this.isPieceCapturable(boardFile,boardRank,boardFileCaptureLeft,boardRankSingle)) moves.push([boardFileCaptureLeft, boardRankSingle])
             }
             //right capture
-            if(boardFileCaputeRight>=1 && boardFileCaputeRight<=8) {
-                tileToCheck = this.getChessboard().getTile(boardFileCaputeRight, boardRankSingle)
-                if(tileToCheck.hasPiece!=null) moves.push([boardFileCaputeRight, boardRankSingle])
+            if(boardFileCaptureRight>=1 && boardFileCaptureRight<=8) {
+                tileToCheck = this.getChessboard().getTile(boardFileCaptureRight, boardRankSingle)
+                if(tileToCheck.hasPiece!=null && this.isPieceCapturable(boardFile,boardRank,boardFileCaptureRight,boardRankSingle)) moves.push([boardFileCaptureRight, boardRankSingle])
             }
         }
         //double pawn push
@@ -303,7 +304,7 @@ class ChessEngine {
             if(tileToCheck.hasPiece==null) {
                 moves.push([boardFileToCheck,boardRankToCheck])
             } else {
-                moves.push([boardFileToCheck,boardRankToCheck])
+                if(this.isPieceCapturable(boardFile,boardRank,boardFileToCheck,boardRankToCheck)) moves.push([boardFileToCheck,boardRankToCheck])
             }
         }
         return moves
