@@ -184,7 +184,13 @@ class ChessEngine {
                         this.generateDirectionMoves("8-1",boardFile,boardRank));
         return moves
     }
-
+    generateBishopMoves(boardFile,boardRank) {
+        const moves = this.generateDirectionMoves("A1-H8",boardFile,boardRank).concat(
+                        this.generateDirectionMoves("A8-H1",boardFile,boardRank),
+                        this.generateDirectionMoves("H1-A8",boardFile,boardRank),
+                        this.generateDirectionMoves("H8-A1",boardFile,boardRank));
+        return moves
+    }
 
 
 
