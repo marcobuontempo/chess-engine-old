@@ -7,6 +7,8 @@ class ChessEngine {
         this._currentTurnMoves = [],    //the tiles that the current player is currently attacking. e.g. [ [file,row], [file,row], ... ]
         this._oppositionTurnMoves = [],    //the tiles that the opposition is currently attacking. e.g. [ [file,row], [file,row], ... ]
         this._currentKingIsInCheck = false,  //whether the current colour's king is in check
+        this._whiteKingPosition = [],
+        this._blackKingPosition = [],
         this.eventHandlers = {  //bind methods. otherwise, 'this' refers to the global variable (this.window). also gives reference so we can remove event listeners
             clickTile: this.clickTile.bind(this)
         }
@@ -31,11 +33,18 @@ class ChessEngine {
     getCurrentTurnMoves() {
         return this._currentTurnMoves;
     }
-    getOppositionTUrnMoves() {
+    getOppositionTurnMoves() {
         return this._oppositionTurnMoves;
     }
     getCurrentKingIsInCheck() {
         return this._currentKingIsInCheck;
+    }
+    getKingPosition(kingColour) {
+        if(kingColour=="white") {
+            return this._whiteKingPosition;
+        } else {
+            return this._blackKingPosition;
+        }
     }
 
     //Setters
@@ -55,7 +64,14 @@ class ChessEngine {
         this._oppositionTurnMoves = newMoves;
     }
     setCurrentKingIsInCheck(isChecked) {
-        this._kingIsInCheck = isChecked;
+        this._currentKingIsInCheck = isChecked;
+    }
+    setKingPosition(kingColour,position) {
+        if(kingColour=="white") {
+            this._whiteKingPosition = position
+        } else {
+            this._blackKingPosition = position
+        }
     }
 
     //Piece Interaction
@@ -84,14 +100,14 @@ class ChessEngine {
             //if no previous piece selected, select newly clicked piece
             this.setSelectedTile(newBoardFile,newBoardRank)
             newTileHtml.classList.toggle("selected-tile")
-            const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
+            const pieceMoves = this.generatePieceMoves(newBoardFile,newBoardRank)
             this.setSelectedPieceMoves(pieceMoves)
             this.toggleValidMovesHighlight(pieceMoves)
         } else if (previousSelectedValue==newSelectedValue) {
             //if same piece is re-selected, disable the piece's selection
             this.setSelectedTile([])
             newTileHtml.classList.toggle("selected-tile")
-            const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
+            const pieceMoves = this.generatePieceMoves(newBoardFile,newBoardRank)
             this.setSelectedPieceMoves([])
             this.toggleValidMovesHighlight(pieceMoves)
         } else if (previousSelectedValue!=newSelectedValue && newSelectedTileObject.hasPiece!=null && newSelectedTileObject.hasPiece.pieceColour==this.getCurrentTurn()) {    
@@ -102,7 +118,7 @@ class ChessEngine {
 
             this.toggleValidMovesHighlight(this.getSelectedPieceMoves())
 
-            const pieceMoves = this.generateMoves(newBoardFile,newBoardRank)
+            const pieceMoves = this.generatePieceMoves(newBoardFile,newBoardRank)
             this.setSelectedPieceMoves(pieceMoves)
             this.toggleValidMovesHighlight(pieceMoves)
         } else {
@@ -151,7 +167,7 @@ class ChessEngine {
 
 
     //Move Validation - Logic
-    generateMoves(boardFileFrom,boardRankFrom) {
+    generatePieceMoves(boardFileFrom,boardRankFrom) {
         const pieceType = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece.pieceType
         let validMoves = [];
 
@@ -334,23 +350,40 @@ class ChessEngine {
 
     //Make Turn
     endTurn() {
+        //toggle turn
+        this.toggleTurn()
+
+        //get turn colours
+        const currentColour = this.getCurrentTurn()
+        const opponentColour = this.getNextTurn()
+
         //update fen
         const newFen = this.getChessboard().createFenString()
         this.getChessboard().setFen(newFen)
-
-        //toggle turn
-        this.toggleTurn()
 
         //reset all values to default
         this.setSelectedTile([])
         this.setSelectedPieceMoves([])
         this.setCurrentTurnMoves([])
 
-        //set attacking pieces
-            //TBC
+        //set attacking tiles
+        const currentMoves = this.generateAllAvailableMoves(currentColour)
+        this.setCurrentTurnMoves(currentMoves)
+        const opponentMoves = this.generateAllAvailableMoves(opponentColour)
+        this.setOppositionTurnMoves(opponentMoves)
+
+        //set king positions
+        this.setKingPosition("white",this.findKingsPosition("white"))
+        this.setKingPosition("black",this.findKingsPosition("black"))
+
+        //is current king in check
+        this.setCurrentKingIsInCheck(this.isKingInCheck(currentColour))
 
         //re-render board
         this.getChessboard().renderBoard()
+
+        //highlight king if checked
+        this.highlightCheckedKing()
 
         //update event listeners
         this.removePieceEventListeners()
@@ -359,16 +392,46 @@ class ChessEngine {
 
 
     //King is Checked
-    generateOpponentsAttackedTiles() {
+    generateAllAvailableMoves(colourToCheck) {
         const attackedTiles = []
-        const oppositeColour = this.getNextTurn()
         this.getChessboard().getBoardTiles().forEach(tile => {
-            if(tile.hasPiece!=null && tile.hasPiece.pieceColour==oppositeColour) {
-                const pieceMoves = this.generateMoves(tile.boardFile,tile.boardRank)
+            if(tile.hasPiece!=null && tile.hasPiece.pieceColour==colourToCheck) {
+                const pieceMoves = this.generatePieceMoves(tile.boardFile,tile.boardRank)
                 pieceMoves.forEach(move => attackedTiles.push(move))
             }
         })
         return attackedTiles
+    }
+    findKingsPosition(colourToCheck) {
+        const kingsPosition = []
+        this.getChessboard().getBoardTiles().forEach(tile => {
+            if(tile.hasPiece!=null && tile.hasPiece.pieceType=="king" && tile.hasPiece.pieceColour==colourToCheck) {
+                kingsPosition.push(tile.boardFile)
+                kingsPosition.push(tile.boardRank)
+            }
+        })
+        return kingsPosition
+    }
+    isKingInCheck(colourToCheck) {
+        let kingIsInCheck = false
+        const kingsFile = this.getKingPosition(colourToCheck)[0]
+        const kingsRank = this.getKingPosition(colourToCheck)[1]
+        const opponentColour = colourToCheck=="white" ? "black" : "white"
+        const opponentsAttackingMoves = this.generateAllAvailableMoves(opponentColour)
+        
+        opponentsAttackingMoves.forEach(move => {
+            if(kingsFile==move[0] && kingsRank==move[1]) {
+                kingIsInCheck = true
+            } 
+        })
+        return kingIsInCheck
+    }
+    highlightCheckedKing() {
+        if(this.getCurrentKingIsInCheck()) {
+            const kingPosition = this.getKingPosition(this.getCurrentTurn())
+            const kingsTileHtml = document.querySelector(`[data-board-file='${kingPosition[0]}'][data-board-rank='${kingPosition[1]}']`)
+            kingsTileHtml.style.backgroundColor = "orange"
+        }
     }
 }
 
@@ -378,4 +441,6 @@ class ChessEngine {
     *Add method to highlight if king is in check
     *Add method to create testEngine. Validate each move before processing (i.e. prevent pinned pieces moving)
     *Add method to check game completed -> if no valid moves -> isKingInCheck = checkmate : stalemate
+
+    *Game must begin with endTurn()
 */

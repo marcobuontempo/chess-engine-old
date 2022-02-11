@@ -7,5 +7,6 @@ game.getChessboard().setFen(game.getChessboard().createFenString())
 game.getChessboard().renderBoard()
 
 
-//to be implemented
-game.addPieceEventListeners()
+//to be implemented as a startgame method
+game.toggleTurn()
+game.endTurn()
