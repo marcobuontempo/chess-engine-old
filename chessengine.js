@@ -126,7 +126,7 @@ class ChessEngine {
             this.handleMovePiece(newBoardFile,newBoardRank)
         }
     }
-    toggleValidMovesHighlight(pieceMoves) {        
+    toggleValidMovesHighlight(pieceMoves) {
         pieceMoves.forEach(validMove => {
             const boardFile = validMove[0]
             const boardRank = validMove[1]
@@ -342,14 +342,15 @@ class ChessEngine {
             const boardRankValid = validMove[1]
             if(boardFileTo==boardFileValid && boardRankTo==boardRankValid) {
                 this.movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo)
-                this.endTurn()
+                this.setupNextTurn()
+                this.updateBoardDisplay()
             }
         })
     }
 
 
     //Make Turn
-    endTurn() {
+    setupNextTurn() {
         //toggle turn
         this.toggleTurn()
 
@@ -378,7 +379,8 @@ class ChessEngine {
 
         //is current king in check
         this.setCurrentKingIsInCheck(this.isKingInCheck(currentColour))
-
+    }
+    updateBoardDisplay() {
         //re-render board
         this.getChessboard().renderBoard()
 
@@ -433,13 +435,32 @@ class ChessEngine {
             kingsTileHtml.style.backgroundColor = "orange"
         }
     }
+
+
+    //Validate Piece Moves
+    isLegalMove(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) {
+        //create temporary test chessboard
+        const currentFen = this.getChessboard().getFen()
+        const testEngine = new ChessEngine(currentFen)
+        testEngine.getChessboard().createBoardTiles()
+
+        //make move
+        testEngine.movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo)
+        testEngine.toggleTurn()
+        testEngine.setupNextTurn()
+
+        //check if king is in check
+        const currentColour = this.getCurrentTurn()
+        return !testEngine.isKingInCheck(currentColour)
+    }
 }
 
 /* TO-DO
     *Add method to get all opposition's attacked tiles -- DONE
-    *Add method to check whether king is in check (i.e. is in attacking tile)
-    *Add method to highlight if king is in check
-    *Add method to create testEngine. Validate each move before processing (i.e. prevent pinned pieces moving)
+    *Add method to check whether king is in check (i.e. is in attacking tile) -- DONE
+    *Add method to highlight if king is in check -- DONE
+    *Add method to create testEngine and validate a move -- DONE
+    *Apply move validation to each psuedo-legal move
     *Add method to check game completed -> if no valid moves -> isKingInCheck = checkmate : stalemate
 
     *Game must begin with endTurn()
