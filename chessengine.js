@@ -357,10 +357,23 @@ class ChessEngine {
         this.addPieceEventListeners()
     }
 
+
+    //King is Checked
+    generateOpponentsAttackedTiles() {
+        const attackedTiles = []
+        const oppositeColour = this.getNextTurn()
+        this.getChessboard().getBoardTiles().forEach(tile => {
+            if(tile.hasPiece!=null && tile.hasPiece.pieceColour==oppositeColour) {
+                const pieceMoves = this.generateMoves(tile.boardFile,tile.boardRank)
+                pieceMoves.forEach(move => attackedTiles.push(move))
+            }
+        })
+        return attackedTiles
+    }
 }
 
 /* TO-DO
-    *Add method to get all opposition's attacked tiles
+    *Add method to get all opposition's attacked tiles -- DONE
     *Add method to check whether king is in check (i.e. is in attacking tile)
     *Add method to highlight if king is in check
     *Add method to create testEngine. Validate each move before processing (i.e. prevent pinned pieces moving)
