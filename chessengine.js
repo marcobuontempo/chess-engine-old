@@ -346,25 +346,25 @@ class ChessEngine {
         if(kingColour=="white" && castleSide=="king") { //castle move to determine
             if(fenCastleString.includes("K")) { //check fen that castle is available
                 if(this.getChessboard().getTile(6,1).hasPiece==null && this.getChessboard().getTile(7,1).hasPiece==null) { //check no pieces between castle movement
-                    if(this.isLegalMove(5,1,7,1)) { return true } //return if move is legal
+                    if(this.isLegalMove(5,1,6,1) && this.isLegalMove(5,1,7,1)) { return true } //return if move is legal
                 }
             } 
         } else if (kingColour=="white" && castleSide=="queen") {
             if(fenCastleString.includes("Q")) {
                 if(this.getChessboard().getTile(4,1).hasPiece==null && this.getChessboard().getTile(3,1).hasPiece==null  && this.getChessboard().getTile(2,1).hasPiece==null) {
-                    if(this.isLegalMove(5,1,3,1)) { return true }
+                    if(this.isLegalMove(5,1,4,1) && this.isLegalMove(5,1,3,1)) { return true }
                 }
             }
         } else if (kingColour=="black" && castleSide=="king") {
             if(fenCastleString.includes("k")) {
                 if(this.getChessboard().getTile(6,8).hasPiece==null && this.getChessboard().getTile(7,8).hasPiece==null) {
-                    if(this.isLegalMove(5,8,7,8)) { return true }
+                    if(this.isLegalMove(5,8,6,8) && this.isLegalMove(5,8,7,8)) { return true }
                 }
             }
         } else if (kingColour="black" && castleSide=="queen") {
             if(fenCastleString.includes("q")) {
                 if(this.getChessboard().getTile(4,8).hasPiece==null && this.getChessboard().getTile(3,8).hasPiece==null && this.getChessboard().getTile(2,8).hasPiece==null) {
-                    if(this.isLegalMove(5,8,3,8)) { return true }
+                    if(this.isLegalMove(5,8,4,8) && this.isLegalMove(5,8,3,8)) { return true }
                 }
             }
         }
