@@ -28,6 +28,12 @@ Pieces-
 class Chessboard {
     constructor(fen) {
         this._fen = fen || "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        this._fenPosition = this._fen.split(" ")[0],
+        this._fenTurn = "",
+        this._fenCastle = "",
+        this._fenEnPassant = "",
+        this._fenHalfMove = "",
+        this._fenFullMove = "",
         this._boardTiles = [],
         this._pieceIcons = {
                 k: "♚",
@@ -50,7 +56,7 @@ class Chessboard {
         return this._fen;
     }
     getPieceFromFen(boardFile, boardRank) {
-        const rankFenString = this.getFen().split(" ")[0].split("/")[8-boardRank]
+        const rankFenString = this.getFenPosition().split("/")[8-boardRank]
 
         let rankFullString = ""
         for(let i=0; i<rankFenString.length; i++) {
@@ -69,8 +75,26 @@ class Chessboard {
             return null
         }
     }
+    getFenPosition() {
+        return this._fenPosition;
+    }
+    getFenTurn() {
+        return this._fenTurn;
+    }
+    getFenCastle() {
+        return this._fenCastle;
+    }
+    getFenEnPassant() {
+        return this._fenEnPassant;
+    }
+    getFenHalfMove() {
+        return this._fenHalfMove;
+    }
+    getFenFullMove() {
+        return this._fenFullMove;
+    }
     getTile(boardFile, boardRank) {
-        return this._boardTiles[boardFile-1][boardRank-1]
+        return this._boardTiles[boardFile-1][boardRank-1];
     }
     getPieceIcon(fenPiece) {
         return this._pieceIcons[fenPiece];
@@ -98,6 +122,31 @@ class Chessboard {
     //Setters
     setFen(newFen) {
         this._fen = newFen;
+        const splitFen = newFen.split(" ")
+        this._fenPosition = splitFen[0]
+        this._fenTurn = splitFen[1]
+        this._fenCastle = splitFen[2]
+        this._fenEnPassant = splitFen[3]
+        this._fenHalfMove = splitFen[4]
+        this._fenFullMove = splitFen[5]
+    }
+    setFenPosition(newPosition) {
+        this._fenPosition = newPosition;
+    }
+    setFenTurn(newTurn) {
+        this._fenTurn = newTurn;
+    }
+    setFenCastle(newCastle) {
+        this._fenCastle = newCastle;
+    }
+    setFenEnPassant(newEnPassant) {
+        this._fenEnPassant = newEnPassant;
+    }
+    setFenHalfMove(newHalfMove) {
+        this._fenHalfMove = newHalfMove;
+    }
+    setFenFullMove(newFullMove) {
+        this._fenFullMove = newFullMove;
     }
     setTile(tileCoordinate, tileColour, boardFile, boardRank, hasPiece) {
         this._boardTiles[boardFile-1][boardRank-1] = this.createTile(tileCoordinate, tileColour, boardFile, boardRank, hasPiece);
@@ -201,9 +250,9 @@ class Chessboard {
         }
         return fenTile;
     }
-    createFenString() {
+    updateFenPositionString() {
         const fenArray = [];
-        let fenString;
+        let newFenPosition;
 
         let rankNotation = [];
         for(let boardRank=1; boardRank<=8; boardRank++) {
@@ -226,8 +275,53 @@ class Chessboard {
             fenArray.push(rankNotation.join(""));
             rankNotation = [];
         }
-        fenString = fenArray.reverse().join("/");
-        return fenString;
+        newFenPosition = fenArray.reverse().join("/");
+        
+        this.setFenPosition(newFenPosition);
+        return newFenPosition
+    }
+    updateFenTurn(turnColour) {
+        let newFenTurn;
+        if(turnColour=="white") {
+            newFenTurn = "w"
+        } else if (turnColour=="black") {
+            newFenTurn = "b"
+        }
+        this.setFenTurn(newFenTurn);
+        return newFenTurn
+    }
+    updateFenCastleString(colour,castleSide) {
+        let newFenCastle = this.getFenCastle()
+
+        if(colour=="white") {
+            switch(castleSide) {
+                case "king": newFenCastle = newFenCastle.replace("K",""); break;
+                case "queen": newFenCastle = newFenCastle.replace("Q",""); break;
+                case "both": newFenCastle = newFenCastle.replace("KQ",""); break;
+            }
+        } else if(colour=="black") {
+            switch(castleSide) {
+                case "king": newFenCastle = newFenCastle.replace("k",""); break;
+                case "queen": newFenCastle = newFenCastle.replace("q",""); break;
+                case "both": newFenCastle = newFenCastle.replace("kq",""); break;
+            }
+        }
+
+        if(newFenCastle.length==0) { newFenCastle="-" }
+
+        this.setFenCastle(newFenCastle)
+    }
+    updateFenStringComplete(turnColour) {
+        const fenPosition = this.updateFenPositionString()
+        const fenTurn = this.updateFenTurn(turnColour)
+        const fenCastle = this.getFenCastle()
+        const fenEnPassant = this.getFenEnPassant() //NEEDS UPDATE
+        const fenHalfMove = this.getFenHalfMove() //NEEDS UPDATE
+        const fenFullMove = this.getFenFullMove() //NEEDS UPDATE
+
+        const newFen = `${fenPosition} ${fenTurn} ${fenCastle} ${fenEnPassant} ${fenHalfMove} ${fenFullMove}`
+
+        this.setFen(newFen)
     }
 
     //Render Board

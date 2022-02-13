@@ -100,16 +100,18 @@ class ChessEngine {
             //if no previous piece selected, select newly clicked piece
             this.setSelectedTile(newBoardFile,newBoardRank)
             newTileHtml.classList.toggle("selected-tile")
-            const pieceMoves = this.generatePieceMoves(newBoardFile,newBoardRank)
-            this.setSelectedPieceMoves(pieceMoves)
-            this.toggleValidMovesHighlight(pieceMoves)
+            const pseudoMoves = this.generatePiecePseudoMoves(newBoardFile,newBoardRank)
+            const validMoves = this.generateValidMoves(newBoardFile,newBoardRank,pseudoMoves)
+            this.setSelectedPieceMoves(validMoves)
+            this.toggleValidMovesHighlight(validMoves)
         } else if (previousSelectedValue==newSelectedValue) {
             //if same piece is re-selected, disable the piece's selection
             this.setSelectedTile([])
             newTileHtml.classList.toggle("selected-tile")
-            const pieceMoves = this.generatePieceMoves(newBoardFile,newBoardRank)
-            this.setSelectedPieceMoves([])
-            this.toggleValidMovesHighlight(pieceMoves)
+            const pseudoMoves = this.generatePiecePseudoMoves(newBoardFile,newBoardRank)
+            const validMoves = this.generateValidMoves(newBoardFile,newBoardRank,pseudoMoves)
+            this.setSelectedPieceMoves(validMoves)
+            this.toggleValidMovesHighlight(validMoves)
         } else if (previousSelectedValue!=newSelectedValue && newSelectedTileObject.hasPiece!=null && newSelectedTileObject.hasPiece.pieceColour==this.getCurrentTurn()) {    
             //if new valid piece is selected, un-select previous and re-select new
             this.setSelectedTile(newBoardFile,newBoardRank)
@@ -118,9 +120,10 @@ class ChessEngine {
 
             this.toggleValidMovesHighlight(this.getSelectedPieceMoves())
 
-            const pieceMoves = this.generatePieceMoves(newBoardFile,newBoardRank)
-            this.setSelectedPieceMoves(pieceMoves)
-            this.toggleValidMovesHighlight(pieceMoves)
+            const pseudoMoves = this.generatePiecePseudoMoves(newBoardFile,newBoardRank)
+            const validMoves = this.generateValidMoves(newBoardFile,newBoardRank,pseudoMoves)
+            this.setSelectedPieceMoves(validMoves)
+            this.toggleValidMovesHighlight(validMoves)
         } else {
             //otherwise, move piece
             this.handleMovePiece(newBoardFile,newBoardRank)
@@ -167,7 +170,12 @@ class ChessEngine {
 
 
     //Move Validation - Logic
-    generatePieceMoves(boardFileFrom,boardRankFrom) {
+    generateValidMoves(boardFileFrom,boardRankFrom,pseudoMoves) {
+        const validMoves = []
+        pseudoMoves.forEach(move => { if(this.isLegalMove(boardFileFrom,boardRankFrom,move[0],move[1])) validMoves.push(move) })
+        return validMoves
+    }
+    generatePiecePseudoMoves(boardFileFrom,boardRankFrom) {
         const pieceType = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece.pieceType
         let validMoves = [];
 
@@ -309,9 +317,9 @@ class ChessEngine {
     generateKingMoves(boardFile,boardRank) {
         const moves = []
 
+        //Regular Moves
         const fileOffset = [-1, -1, -1,  0,  0,  1,  1,  1]
         const rankOffset = [-1,  0,  1, -1,  1, -1,  0,  1]
-
         for(let i=0; i<8; i++) {
             const boardFileToCheck = boardFile+fileOffset[i];
             const boardRankToCheck = boardRank+rankOffset[i];
@@ -324,15 +332,89 @@ class ChessEngine {
                 if(this.isPieceCapturable(boardFile,boardRank,boardFileToCheck,boardRankToCheck)) moves.push([boardFileToCheck,boardRankToCheck])
             }
         }
+
+        //Castling
+        const kingColour = this.getChessboard().getTile(boardFile,boardRank).hasPiece.pieceColour
+        if(this.canKingCastle(kingColour,"king")) { moves.push([boardFile+2,boardRank]) }
+        if(this.canKingCastle(kingColour,"queen")) { moves.push([boardFile-2,boardRank]) }
+
         return moves
     }
+    canKingCastle(kingColour,castleSide) {
+        const fenCastleString = this.getChessboard().getFenCastle()
 
+        if(kingColour=="white" && castleSide=="king") { //castle move to determine
+            if(fenCastleString.includes("K")) { //check fen that castle is available
+                if(this.getChessboard().getTile(6,1).hasPiece==null && this.getChessboard().getTile(7,1).hasPiece==null) { //check no pieces between castle movement
+                    if(this.isLegalMove(5,1,7,1)) { return true } //return if move is legal
+                }
+            } 
+        } else if (kingColour=="white" && castleSide=="queen") {
+            if(fenCastleString.includes("Q")) {
+                if(this.getChessboard().getTile(4,1).hasPiece==null && this.getChessboard().getTile(3,1).hasPiece==null  && this.getChessboard().getTile(2,1).hasPiece==null) {
+                    if(this.isLegalMove(5,1,3,1)) { return true }
+                }
+            }
+        } else if (kingColour=="black" && castleSide=="king") {
+            if(fenCastleString.includes("k")) {
+                if(this.getChessboard().getTile(6,8).hasPiece==null && this.getChessboard().getTile(7,8).hasPiece==null) {
+                    if(this.isLegalMove(5,8,7,8)) { return true }
+                }
+            }
+        } else if (kingColour="black" && castleSide=="queen") {
+            if(fenCastleString.includes("q")) {
+                if(this.getChessboard().getTile(4,8).hasPiece==null && this.getChessboard().getTile(3,8).hasPiece==null && this.getChessboard().getTile(2,8).hasPiece==null) {
+                    if(this.isLegalMove(5,8,3,8)) { return true }
+                }
+            }
+        }
+        return false //otherwise return false
+    }
+    moveRookCastle(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) {
+        if(boardFileFrom==5 && boardRankFrom==1) {
+            if(boardFileTo==7 && boardRankTo==1) {
+                const rookFrom = this.getChessboard().getTile(8,1).hasPiece
+                this.getChessboard().setTilePiece(8,1,null) 
+                this.getChessboard().setTilePiece(6,1,rookFrom) 
+            } else if(boardFileTo==3 && boardRankTo==1) {
+                const rookFrom = this.getChessboard().getTile(1,1).hasPiece
+                this.getChessboard().setTilePiece(1,1,null) 
+                this.getChessboard().setTilePiece(4,1,rookFrom)
+            }
+        } else if(boardFileFrom==5 && boardRankFrom==8) {
+            if(boardFileTo==7 && boardRankTo==8) {
+                const rookFrom = this.getChessboard().getTile(8,8).hasPiece
+                this.getChessboard().setTilePiece(8,8,null) 
+                this.getChessboard().setTilePiece(6,8,rookFrom)
+            } else if(boardFileTo==3 && boardRankTo==8) {
+                const rookFrom = this.getChessboard().getTile(1,8).hasPiece
+                this.getChessboard().setTilePiece(1,8,null) 
+                this.getChessboard().setTilePiece(4,8,rookFrom)
+            }
+        }
+    }
+    updateCastleRights(boardFileFrom,boardRankFrom) {
+        const moveFrom = `${boardFileFrom}${boardRankFrom}`
+        switch(moveFrom) {
+            case "11": this.getChessboard().updateFenCastleString("white","queen"); break;
+            case "81": this.getChessboard().updateFenCastleString("white","king"); break;
+            case "51": this.getChessboard().updateFenCastleString("white","both"); break;
+            case "18": this.getChessboard().updateFenCastleString("black","queen"); break;
+            case "88": this.getChessboard().updateFenCastleString("black","king"); break;
+            case "58": this.getChessboard().updateFenCastleString("black","both"); break;
+        }
+    }
 
     //Move Piece
     movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) {
         const pieceFrom = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece
         this.getChessboard().setTilePiece(boardFileFrom,boardRankFrom,null) //remove existing piece from first tile
         this.getChessboard().setTilePiece(boardFileTo,boardRankTo,pieceFrom) //set existing piece onto second tile
+
+        //Castling Logic
+        this.moveRookCastle(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) //moves rook if castle move
+        this.updateCastleRights(boardFileFrom,boardRankFrom) //updates castling validity
+
     }
     handleMovePiece(boardFileTo,boardRankTo) { 
         const boardFileFrom = this.getSelectedTile()[0]
@@ -359,8 +441,7 @@ class ChessEngine {
         const opponentColour = this.getNextTurn()
 
         //update fen
-        const newFen = this.getChessboard().createFenString()
-        this.getChessboard().setFen(newFen)
+        this.getChessboard().updateFenStringComplete(currentColour)
 
         //reset all values to default
         this.setSelectedTile([])
@@ -398,7 +479,7 @@ class ChessEngine {
         const attackedTiles = []
         this.getChessboard().getBoardTiles().forEach(tile => {
             if(tile.hasPiece!=null && tile.hasPiece.pieceColour==colourToCheck) {
-                const pieceMoves = this.generatePieceMoves(tile.boardFile,tile.boardRank)
+                const pieceMoves = this.generatePiecePseudoMoves(tile.boardFile,tile.boardRank)
                 pieceMoves.forEach(move => attackedTiles.push(move))
             }
         })
@@ -439,6 +520,8 @@ class ChessEngine {
 
     //Validate Piece Moves
     isLegalMove(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) {
+        let validMove = true
+
         //create temporary test chessboard
         const currentFen = this.getChessboard().getFen()
         const testEngine = new ChessEngine(currentFen)
@@ -451,7 +534,9 @@ class ChessEngine {
 
         //check if king is in check
         const currentColour = this.getCurrentTurn()
-        return !testEngine.isKingInCheck(currentColour)
+        validMove = validMove==true && !testEngine.isKingInCheck(currentColour)
+
+        return validMove
     }
 }
 
@@ -460,7 +545,11 @@ class ChessEngine {
     *Add method to check whether king is in check (i.e. is in attacking tile) -- DONE
     *Add method to highlight if king is in check -- DONE
     *Add method to create testEngine and validate a move -- DONE
-    *Apply move validation to each psuedo-legal move
+    *Apply move validation to each psuedo-legal move -- DONE
+    *create fenPosition, fenEnPassant, fenCastling. combine in createFen
+    *getFenPiece .split() necessary? Use getFenPosition?
+    *Castle logic - check if castle available (from Fen string) - check if moving squares are unattacked - add to available moves - handlemovepiece= if move piece file/rowFrom is default, and file/rowTo is castle square, complete csatle (move rook & king)
+    *En Passant logic
     *Add method to check game completed -> if no valid moves -> isKingInCheck = checkmate : stalemate
 
     *Game must begin with endTurn()
