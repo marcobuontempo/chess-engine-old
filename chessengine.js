@@ -616,8 +616,7 @@ class ChessEngine {
     *En Passant logic -- DONE
     *create fenPosition, fenEnPassant, fenCastling. combine in createFen -- DONE
     *create fenHalfMove and fenFullMove counters -- DONE
-    *add pawn promotion
-    *Add method to check game completed -> if no valid moves -> isKingInCheck = checkmate : stalemate
+    *add pawn promotion -- DONE
 
     *Game must begin with endTurn()
 */
