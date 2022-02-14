@@ -163,6 +163,21 @@ class ChessEngine {
         }
         return onEdge;
     }
+    convertCoordinateToFileNumber(coordinate) {
+        if(coordinate.length < 2) { return }
+        let fileNumber
+        switch(coordinate[0].toUpperCase()) {
+            case "A": fileNumber=1; break;
+            case "B": fileNumber=2; break;
+            case "C": fileNumber=3; break;
+            case "D": fileNumber=4; break;
+            case "E": fileNumber=5; break;
+            case "F": fileNumber=6; break;
+            case "G": fileNumber=7; break;
+            case "H": fileNumber=8; break;
+        }
+        return fileNumber 
+    }
     toggleTurn() {
         const newColour = this.getCurrentTurn()=="white" ? "black" : "white"
         this.setCurrentTurn(newColour)
@@ -311,6 +326,10 @@ class ChessEngine {
                 tileToCheck = this.getChessboard().getTile(boardFileCaptureRight, boardRankSingle)
                 if(tileToCheck.hasPiece!=null && this.isPieceCapturable(boardFile,boardRank,boardFileCaptureRight,boardRankSingle)) moves.push([boardFileCaptureRight, boardRankSingle])
             }
+
+            //en passant
+            const enPassantMove = this.calculateEnPassantMove(boardFile,boardRank,boardRankSingle,pieceColour)
+            if(enPassantMove!=null) { moves.push(enPassantMove) }
         }
         return moves
     }
@@ -340,6 +359,8 @@ class ChessEngine {
 
         return moves
     }
+
+    //Castle Moves
     canKingCastle(kingColour,castleSide) {
         const fenCastleString = this.getChessboard().getFenCastle()
 
@@ -405,6 +426,31 @@ class ChessEngine {
         }
     }
 
+    //En Passant Moves
+    calculateEnPassantMove(boardFile, boardRank, boardRankSingle, pieceColour) {
+        if((pieceColour=="white" && boardRank==5) || (pieceColour=="black" && boardRank==4)) {
+            const coordinate = this.getChessboard().getFenEnPassant()
+            const enPassantFile = this.convertCoordinateToFileNumber(coordinate)
+            const enPassantRank = Number(coordinate[1])
+            if((boardFile+1==enPassantFile || boardFile-1==enPassantFile) && boardRankSingle==enPassantRank) {
+                return [enPassantFile,enPassantRank]
+            }
+        }
+        return null
+    }
+    captureEnPassantPiece(boardFileTo,boardRankTo,piece) {
+        if(piece.pieceType=="pawn") {
+            const coordinate = this.getChessboard().getFenEnPassant()
+            const enPassantFile = this.convertCoordinateToFileNumber(coordinate)
+            const enPassantRank = Number(coordinate[1])
+            if(boardFileTo==enPassantFile && boardRankTo==enPassantRank) {
+                const offset = piece.pieceColour=="white" ? -1 : 1
+                this.getChessboard().setTilePiece(enPassantFile,enPassantRank+offset,null)
+            }
+        }
+    }
+
+
     //Move Piece
     movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) {
         const pieceFrom = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece
@@ -415,6 +461,9 @@ class ChessEngine {
         this.moveRookCastle(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) //moves rook if castle move
         this.updateCastleRights(boardFileFrom,boardRankFrom) //updates castling validity
 
+        //En Passant Logic
+        this.captureEnPassantPiece(boardFileTo,boardRankTo,pieceFrom)
+        this.getChessboard().updateFenEnPassant(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo,pieceFrom)
     }
     handleMovePiece(boardFileTo,boardRankTo) { 
         const boardFileFrom = this.getSelectedTile()[0]
@@ -546,10 +595,9 @@ class ChessEngine {
     *Add method to highlight if king is in check -- DONE
     *Add method to create testEngine and validate a move -- DONE
     *Apply move validation to each psuedo-legal move -- DONE
-    *create fenPosition, fenEnPassant, fenCastling. combine in createFen
-    *getFenPiece .split() necessary? Use getFenPosition?
-    *Castle logic - check if castle available (from Fen string) - check if moving squares are unattacked - add to available moves - handlemovepiece= if move piece file/rowFrom is default, and file/rowTo is castle square, complete csatle (move rook & king)
+    *Castle logic - check if castle available (from Fen string) - check if moving squares are unattacked - add to available moves - handlemovepiece= if move piece file/rowFrom is default, and file/rowTo is castle square, complete csatle (move rook & king) -- DONE
     *En Passant logic
+    *create fenPosition, fenEnPassant, fenCastling. combine in createFen
     *Add method to check game completed -> if no valid moves -> isKingInCheck = checkmate : stalemate
 
     *Game must begin with endTurn()

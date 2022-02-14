@@ -311,11 +311,22 @@ class Chessboard {
 
         this.setFenCastle(newFenCastle)
     }
+    updateFenEnPassant(boardFileFrom,boardRankFrom, boardFileTo, boardRankTo, piece) {
+        if(piece.pieceType=="pawn") {
+            if((boardRankFrom==2 && boardRankTo==4) || (boardRankFrom==7 && boardRankTo==5)) {
+                const offset = piece.pieceColour=="white" ? 1 : -1
+                const coordinate = this.createTileCoordinate(boardFileFrom,boardRankFrom+offset).toLowerCase()
+                this.setFenEnPassant(coordinate)
+                return
+            }
+        }
+        this.setFenEnPassant("-")
+    }
     updateFenStringComplete(turnColour) {
         const fenPosition = this.updateFenPositionString()
         const fenTurn = this.updateFenTurn(turnColour)
         const fenCastle = this.getFenCastle()
-        const fenEnPassant = this.getFenEnPassant() //NEEDS UPDATE
+        const fenEnPassant = this.getFenEnPassant()
         const fenHalfMove = this.getFenHalfMove() //NEEDS UPDATE
         const fenFullMove = this.getFenFullMove() //NEEDS UPDATE
 
