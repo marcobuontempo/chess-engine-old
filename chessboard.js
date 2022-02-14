@@ -322,16 +322,36 @@ class Chessboard {
         }
         this.setFenEnPassant("-")
     }
-    updateFenStringComplete(turnColour) {
+    updateFenHalfMove(pieceFrom, pieceTo) {
+        if(pieceFrom==null) { 
+            return Number(this.getFenHalfMove()) + 1 
+        } else if(pieceTo!=null || pieceFrom.pieceType=="pawn") {
+            this.setFenHalfMove(0)
+            return 0
+        } else {
+            const newHalfMove = Number(this.getFenHalfMove()) + 1
+            this.setFenHalfMove(newHalfMove)
+            return newHalfMove
+        }
+    }
+    updateFenFullMove(colour) {
+        if(colour=="white") {
+            const newFullMove = Number(this.getFenFullMove()) + 1
+            this.setFenFullMove(newFullMove)
+            return newFullMove
+        } else {
+            return this.getFenFullMove()
+        }
+    }
+    updateFenStringComplete(turnColour,pieceFrom,pieceTo) {
         const fenPosition = this.updateFenPositionString()
         const fenTurn = this.updateFenTurn(turnColour)
         const fenCastle = this.getFenCastle()
         const fenEnPassant = this.getFenEnPassant()
-        const fenHalfMove = this.getFenHalfMove() //NEEDS UPDATE
-        const fenFullMove = this.getFenFullMove() //NEEDS UPDATE
+        const fenHalfMove = this.updateFenHalfMove(pieceFrom,pieceTo)
+        const fenFullMove = this.updateFenFullMove(turnColour)
 
         const newFen = `${fenPosition} ${fenTurn} ${fenCastle} ${fenEnPassant} ${fenHalfMove} ${fenFullMove}`
-
         this.setFen(newFen)
     }
 
