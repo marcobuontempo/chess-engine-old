@@ -426,6 +426,7 @@ class ChessEngine {
         }
     }
 
+
     //En Passant Moves
     calculateEnPassantMove(boardFile, boardRank, boardRankSingle, pieceColour) {
         if((pieceColour=="white" && boardRank==5) || (pieceColour=="black" && boardRank==4)) {
@@ -494,6 +495,18 @@ class ChessEngine {
     }
 
 
+    //Pawn Promotion
+    promotePawn(pieceFrom,boardFileTo,boardRankTo) {
+        const colour = pieceFrom.pieceColour
+        if((colour=="white" && boardRankTo==8) || (colour=="black" && boardRankTo==1)) {
+            const pieceType = "queen"
+            const fenType = colour=="white" ? "Q" : "q"
+            const promotedPiece = this.getChessboard().createPiece(colour,pieceType,fenType)
+            this.getChessboard().setTilePiece(boardFileTo,boardRankTo,promotedPiece)
+        }
+    }
+
+
     //Move Piece
     movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo) {
         const pieceFrom = this.getChessboard().getTile(boardFileFrom,boardRankFrom).hasPiece
@@ -507,6 +520,9 @@ class ChessEngine {
         //En Passant Logic
         this.captureEnPassantPiece(boardFileTo,boardRankTo,pieceFrom)
         this.getChessboard().updateFenEnPassant(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo,pieceFrom)
+
+        //Pawn Promotion
+        this.promotePawn(pieceFrom,boardFileTo,boardRankTo)
     }
     handleMovePiece(boardFileTo,boardRankTo) { 
         const boardFileFrom = this.getSelectedTile()[0]
@@ -600,6 +616,7 @@ class ChessEngine {
     *En Passant logic -- DONE
     *create fenPosition, fenEnPassant, fenCastling. combine in createFen -- DONE
     *create fenHalfMove and fenFullMove counters -- DONE
+    *add pawn promotion
     *Add method to check game completed -> if no valid moves -> isKingInCheck = checkmate : stalemate
 
     *Game must begin with endTurn()

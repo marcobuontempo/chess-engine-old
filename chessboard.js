@@ -55,7 +55,7 @@ class Chessboard {
     getFen() {
         return this._fen;
     }
-    getPieceFromFen(boardFile, boardRank) {
+    getFenPieceNotation(boardFile, boardRank) {
         const rankFenString = this.getFenPosition().split("/")[8-boardRank]
 
         let rankFullString = ""
@@ -159,8 +159,15 @@ class Chessboard {
     }
 
     //Create Board
-    createPiece(boardFile, boardRank) {
-        const fenPiece = this.getPieceFromFen(boardFile,boardRank)
+    createPiece(pieceColour,pieceType,fenPiece) {
+        return {
+            pieceColour,
+            pieceType,
+            pieceIcon: this.getPieceIcon(fenPiece)
+        }
+    }
+    createPieceFromFen(boardFile, boardRank) {
+        const fenPiece = this.getFenPieceNotation(boardFile,boardRank)
         let pieceColour
         let pieceType
         if(fenPiece) {
@@ -173,11 +180,8 @@ class Chessboard {
                 case "k": pieceType = "king"; break;
                 case "p": pieceType = "pawn"; break;
             }
-            return {
-                pieceColour,
-                pieceType,
-                pieceIcon: this.getPieceIcon(fenPiece)
-            }
+            return this.createPiece(pieceColour,pieceType,fenPiece)
+            
         } else {
             return null
         }
@@ -219,7 +223,7 @@ class Chessboard {
             for(let boardRank=1; boardRank<=8; boardRank++) {
                 const tileCoordinate = this.createTileCoordinate(boardFile,boardRank)
                 const tileColour = this.createTileColour(boardFile,boardRank);
-                const hasPiece = this.createPiece(boardFile,boardRank)
+                const hasPiece = this.createPieceFromFen(boardFile,boardRank)
                 const tile = this.createTile(tileCoordinate,tileColour,boardFile,boardRank,hasPiece);
                 file.push(tile);
             }
