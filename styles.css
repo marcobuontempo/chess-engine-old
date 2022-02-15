@@ -11,6 +11,7 @@ html, body {
 /* BOARD DISPLAY */
 #chessboard-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     width: 100%;
@@ -65,7 +66,7 @@ html, body {
     height:100%;
     margin:0;
     padding:0;
-    font-size:42px;
+    font-size:40px;
     text-align:center;
     z-index:10;
     position:absolute;
@@ -83,8 +84,14 @@ html, body {
 
 /* BOARD HIGHLIGHTS */
 .selected-tile {
-    background-color: red;
+    background-color: red !important; 
 }
 .highlighted-tile {
     background-color: green;
+}
+
+
+/* END GAME */
+#game-state {
+    text-transform: capitalize;
 }

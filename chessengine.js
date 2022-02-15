@@ -1,6 +1,7 @@
 class ChessEngine {
     constructor(fen) {
         this._chessboard = new Chessboard(fen),  //the game board to operate within
+        this._gameState = "in-progress",    //current game state : in-progress, checkmate: checkmate: white wins, checkmate: checkmate: black wins, stalemate, 3-fold repetition, draw: 50 move rule
         this._currentTurn = "white",    //current turn's colour
         this._selectedTile = [],    //the currently selected piece
         this._selectedPieceMoves = [], //the tiles that the current selected piece is attacking
@@ -17,6 +18,9 @@ class ChessEngine {
     //Getters
     getChessboard() {
         return this._chessboard;
+    }
+    getGameState() {
+        return this._gameState;
     }
     getCurrentTurn() {
         return this._currentTurn;
@@ -50,6 +54,9 @@ class ChessEngine {
     //Setters
     setCurrentTurn(newColour) {
         this._currentTurn = newColour;
+    }
+    setGameState(newGameState) {
+        this._gameState = newGameState;
     }
     setSelectedTile(boardFile,boardRank) {
         this._selectedTile = [boardFile,boardRank];
@@ -353,9 +360,9 @@ class ChessEngine {
         }
 
         //Castling
-        const kingColour = this.getChessboard().getTile(boardFile,boardRank).hasPiece.pieceColour
-        if(this.canKingCastle(kingColour,"king")) { moves.push([boardFile+2,boardRank]) }
-        if(this.canKingCastle(kingColour,"queen")) { moves.push([boardFile-2,boardRank]) }
+            const kingColour = this.getChessboard().getTile(boardFile,boardRank).hasPiece.pieceColour
+            if(this.canKingCastle(kingColour,"king")) { moves.push([boardFile+2,boardRank]) }
+            if(this.canKingCastle(kingColour,"queen")) { moves.push([boardFile-2,boardRank]) }
 
         return moves
     }
@@ -535,6 +542,7 @@ class ChessEngine {
                 const pieceTo = this.getChessboard().getTile(boardFileTo,boardRankTo).hasPiece
                 this.movePiece(boardFileFrom,boardRankFrom,boardFileTo,boardRankTo)
                 this.setupNextTurn(pieceFrom,pieceTo)
+                this.updateGameState(this.getCurrentTurn())
                 this.updateBoardDisplay()
             }
         })
@@ -603,8 +611,82 @@ class ChessEngine {
         //update event listeners
         this.removePieceEventListeners()
         this.addPieceEventListeners()
+
+        //update game state
+        this.endGame(this.getGameState())
+    }
+    startGame() {
+        this.getChessboard().createBoardTiles()
+        this.getChessboard().setFen(this.getChessboard().getFen())
+        this.getChessboard().setFenHalfMove(this.getChessboard().getFenHalfMove()-1)
+        this.getChessboard().setFenFullMove(this.getChessboard().getFenFullMove()-1)
+        this.toggleTurn()
+        this.setupNextTurn()
+        this.updateBoardDisplay()
+    }
+
+
+    //Check game has ended
+    updateGameState(currentColour) {
+        let newGameState = this.getGameState();
+        if(this.getCurrentKingIsInCheck(currentColour)) {
+            const kingPosition = this.getKingPosition(currentColour)
+            const psuedoKingMoves = this.generateKingMoves(kingPosition[0],kingPosition[1])
+            const validKingMoves = this.generateValidMoves(kingPosition[0],kingPosition[1],psuedoKingMoves)
+
+            if(validKingMoves.length==0) {
+                newGameState = currentColour=="white" ? "checkmate: black wins" : "checkmate: white wins"
+            } else {
+                newGameState = "stalemate"
+            }
+        } else if(this.getChessboard().getFenHalfMove()==50) {
+            newGameState = "draw: 50 move rule"
+        }
+        this.setGameState(newGameState)
+    }
+    endGame(gameState) {
+        if(gameState!="in-progress") {
+            this.removePieceEventListeners()
+            switch(gameState) {
+                case "checkmate: white wins": 
+                break;
+    
+                case "checkmate: black wins": 
+                break;
+    
+                case "stalemate": case "draw: 50 move rule": case "3-fold repetition": 
+                break;
+            }
+            document.querySelector("#game-state").innerHTML = gameState
+        }
     }
 }
+
+/*
+    FIXES REQUIRED:
+        -King in check results in stalemate -> endGame() logic
+        -King is allowed to castle while in check -> generateKingMoves() logic
+        -Due to infinite loop of function calls when generating allvalidmoves moves
+*/
+
+/* 
+    *Check game completed : -- DONE
+        if isKingInCheck ? validmoves=0 ? checkmate : stalemate
+        if halfmove = 50 ? draw -- DONE
+
+    *Implement 3-fold repetition check :
+        method to return the move ff/rf/ft/rt
+        store last 6? moves in array
+        if moves 1==3==5 && 2==4==6 ? draw
+    
+    *Endgame :
+        remove all event listeners -- DONE
+        animate multiple colours on board. board finishes on winning colour
+
+    *Castle :
+        prevent castle while king is in check -> check current king square isnt attacked either
+*/
+
 
 /* TO-DO
     *Add method to get all opposition's attacked tiles -- DONE
@@ -618,5 +700,7 @@ class ChessEngine {
     *create fenHalfMove and fenFullMove counters -- DONE
     *add pawn promotion -- DONE
 
-    *Game must begin with endTurn()
+    *Game must begin with startGame() -- DONE
 */
+
+
